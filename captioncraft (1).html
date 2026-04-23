@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CaptionCraft — AI Video Captions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Anton&family=Bebas+Neue&family=Oswald:wght@400;600;700&family=Montserrat:wght@400;700;900&family=Roboto:wght@400;700&family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&family=Dancing+Script:wght@700&family=Pacifico&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d14;--surf:#15151f;--surf2:#1c1c28;--surf3:#232332;
+  --border:#2b2b3d;--border2:#363650;
+  --accent:#7c5cfc;--accent2:#4f9ef8;--accentDim:#5a3fd4;
+  --text:#e4e4ef;--text2:#8888aa;--text3:#52526a;
+  --success:#4ade80;--warn:#fbbf24;--err:#f87171;
+  --r:8px;--r2:12px;--r3:18px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:13px;line-height:1.5;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--accentDim)}
+.btn-secondary{background:var(--surf3);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover:not(:disabled){background:var(--border)}
+.btn-ghost{background:transparent;color:var(--text2);padding:6px 10px}
+.btn-ghost:hover:not(:disabled){background:var(--surf3);color:var(--text)}
+.btn-danger{background:transparent;color:var(--err);padding:4px 6px;border-radius:var(--r)}
+.btn-danger:hover:not(:disabled){background:rgba(248,113,113,.12)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-icon{padding:6px}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-.3px;color:var(--text)}
+.logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.header-actions{display:flex;align-items:center;gap:7px;margin-left:auto;flex-wrap:wrap}
+.model-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--surf3);border:1px solid var(--border);border-radius:var(--r);font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s}
+.model-chip:hover{border-color:var(--accent);color:var(--text)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+
+/* ── Main Layout ────────────────────────────────────────────────── */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* ── Video Panel ────────────────────────────────────────────────── */
+.video-panel{flex:1;display:flex;flex-direction:column;background:#000;min-width:0}
+.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;position:relative}
+.canvas-wrap.drag-over{outline:2px dashed var(--accent);outline-offset:-4px}
+#main-canvas{display:block;max-width:100%;max-height:100%}
+
+/* Drop Overlay */
+.drop-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;color:var(--text2)}
+.drop-overlay:hover .drop-circle{border-color:var(--accent);background:rgba(124,92,252,.06)}
+.drop-circle{width:96px;height:96px;border-radius:50%;border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.drop-overlay h2{font-size:17px;font-weight:700;color:var(--text)}
+.drop-overlay p{font-size:12px;color:var(--text3)}
+
+/* Controls Bar */
+.ctrl-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surf);border-top:1px solid var(--border);flex-shrink:0}
+.timeline-wrap{flex:1;display:flex;flex-direction:column;gap:3px}
+.timeline{-webkit-appearance:none;width:100%;height:4px;background:var(--border2);border-radius:2px;cursor:pointer;outline:none}
+.timeline::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;transition:transform .1s}
+.timeline::-webkit-slider-thumb:hover{transform:scale(1.3)}
+.time-disp{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.crop-toggle{display:flex;gap:3px;background:var(--surf3);border-radius:var(--r);padding:3px;flex-shrink:0}
+.crop-btn{padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.crop-btn.on{background:var(--accent);color:#fff}
+
+/* ── Right Panel ────────────────────────────────────────────────── */
+.right-panel{width:330px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surf);border-left:1px solid var(--border);overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-btn{flex:1;padding:10px 8px;border:none;background:transparent;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.01em}
+.tab-btn.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.on){color:var(--text);background:var(--surf2)}
+.tab-pane{display:none;flex:1;overflow:hidden;flex-direction:column}
+.tab-pane.on{display:flex}
+
+/* Caption List */
+.cap-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.cap-count{font-size:11px;color:var(--text2)}
+.cap-list{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:4px}
+.cap-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;color:var(--text3);padding:24px;text-align:center;line-height:1.6}
+.cap-empty svg{opacity:.25}
+.cap-empty .transcribe-cta{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:4px}
+.cap-empty .transcribe-cta .btn-primary{padding:10px 20px;font-size:14px;gap:8px}
+.cap-empty .transcribe-cta .btn-primary svg{width:16px;height:16px}
+.cap-empty .transcribe-cta p{font-size:11px;color:var(--text3)}
+.cap-item{background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:8px 9px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:5px}
+.cap-item:hover{border-color:var(--accent)}
+.cap-item.active{border-color:var(--accent);background:rgba(124,92,252,.07)}
+.cap-item-top{display:flex;align-items:center;gap:6px}
+.time-row{display:flex;align-items:center;gap:4px;flex:1}
+.time-in{width:60px;background:var(--surf3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Inter',monospace;font-size:11px;padding:3px 5px;text-align:center;outline:none;transition:border .15s}
+.time-in:focus{border-color:var(--accent)}
+.time-sep{color:var(--text3);font-size:11px}
+.cap-ta{width:100%;background:transparent;border:none;border-top:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:6px 0 0;resize:none;outline:none;min-height:36px;line-height:1.4}
+
+/* Style Panel */
+.style-panel{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:18px}
+.sgroup{display:flex;flex-direction:column;gap:8px}
+.slabel{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+.srow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+select,input[type=number]{background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:12px;padding:6px 8px;outline:none;transition:border .15s}
+select:focus,input[type=number]:focus{border-color:var(--accent)}
+select{cursor:pointer}
+input[type=number]{width:56px}
+input[type=color]{width:34px;height:30px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px;background:var(--surf2)}
+input[type=range]{-webkit-appearance:none;height:4px;background:var(--border2);border-radius:2px;outline:none;flex:1;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer}
+.tog{padding:5px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surf2);color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;font-weight:500}
+.tog.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pos-btn{padding:6px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--surf2);color:var(--text2);font-size:10px;cursor:pointer;text-align:center;transition:all .15s}
+.pos-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.font-prev{padding:10px 14px;background:var(--surf3);border-radius:var(--r);text-align:center;font-size:22px;color:#fff;min-height:52px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.range-val{font-size:11px;color:var(--text2);min-width:32px;text-align:right}
+
+/* Status Bar */
+.status-bar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--surf);border-top:1px solid var(--border);flex-shrink:0;font-size:11px;color:var(--text2)}
+.status-prog-wrap{flex:1;background:var(--border);border-radius:2px;height:3px;overflow:hidden;opacity:0;transition:opacity .3s}
+.status-prog-wrap.show{opacity:1}
+.status-prog{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .3s;width:0%}
+.status-pct{font-size:11px;min-width:32px;text-align:right}
+
+/* Model Loading Overlay */
+.model-overlay{position:fixed;inset:0;background:rgba(13,13,20,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:200;backdrop-filter:blur(8px)}
+.model-overlay.show{display:flex}
+.spinner{width:38px;height:38px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.model-overlay h3{font-size:16px;font-weight:700}
+.model-overlay p{font-size:12px;color:var(--text2);text-align:center;max-width:260px;line-height:1.6}
+.model-bar-wrap{width:240px;background:var(--border2);border-radius:4px;height:6px;overflow:hidden}
+.model-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;width:0%}
+
+/* Export / Model Modals */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:150;backdrop-filter:blur(5px);padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:var(--surf);border:1px solid var(--border2);border-radius:var(--r3);padding:22px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.modal h2{font-size:17px;font-weight:700}
+.modal-info{background:var(--surf2);border-radius:var(--r);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.65}
+.modal-info strong{color:var(--text)}
+.exp-prog-wrap{background:var(--border2);border-radius:4px;height:7px;overflow:hidden}
+.exp-prog{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s;width:0%}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.model-opt{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .15s}
+.model-opt:hover{border-color:var(--accent);background:var(--surf2)}
+.model-opt.on{border-color:var(--accent);background:rgba(124,92,252,.08)}
+.model-opt input[type=radio]{accent-color:var(--accent)}
+.model-size{font-size:10px;color:var(--text3);margin-left:4px}
+.model-desc{font-size:11px;color:var(--text2)}
+.badge{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;vertical-align:middle;margin-left:4px;letter-spacing:.04em}
+
+/* Responsive */
+@media(max-width:768px){
+  .main{flex-direction:column}
+  .right-panel{width:100%;height:260px;border-left:none;border-top:1px solid var(--border)}
+  .logo span{display:none}
+  body,html{overflow-y:auto;overflow-x:hidden}
+  .main{overflow:visible}
+  .video-panel{min-height:240px}
+}
+@media(max-width:480px){
+  .header-actions .btn-secondary:not(#btn-upload):not(#btn-transcribe):not(#btn-export){display:none}
+  .header-actions{gap:5px}
+  .header{padding:9px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+    <span>CaptionCraft</span>
+  </div>
+  <div class="header-actions">
+    <div class="model-chip" id="model-chip" onclick="openModelModal()">
+      <div class="dot" id="model-dot" style="background:var(--text3)"></div>
+      <span id="model-label">whisper-small</span>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-in').click()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload Video
+    </button>
+    <button class="btn btn-secondary btn-sm" id="btn-transcribe" disabled onclick="window.triggerTranscribe()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Transcribe
+    </button>
+    <button class="btn btn-primary btn-sm" id="btn-export" disabled onclick="openExportModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+      Export Video
+    </button>
+  </div>
+</header>
+
+<input type="file" id="file-in" accept="video/*" style="display:none">
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- Video Panel -->
+  <div class="video-panel">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="main-canvas"></canvas>
+      <video id="vid" style="display:none" playsinline></video>
+
+      <div class="drop-overlay" id="drop-overlay" onclick="document.getElementById('file-in').click()">
+        <div class="drop-circle">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h2>Drop a video here</h2>
+        <p>MP4, MOV, WebM, AVI · or click to browse</p>
+        <button class="btn btn-primary" style="pointer-events:none">Choose Video</button>
+        <p style="font-size:10px;color:var(--text3);margin-top:-6px">Video never leaves your browser</p>
+      </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="ctrl-bar" id="ctrl-bar" style="display:none">
+      <button class="btn btn-ghost btn-icon" id="btn-play" title="Play / Pause (Space)">
+        <svg id="ico-play" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <svg id="ico-pause" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <div class="timeline-wrap">
+        <input type="range" class="timeline" id="timeline" min="0" max="100" step="0.05" value="0">
+        <div class="time-disp" id="time-disp">0:00.0 / 0:00.0</div>
+      </div>
+      <div class="crop-toggle">
+        <button class="crop-btn on" id="c-orig" onclick="setCrop('original')">Original</button>
+        <button class="crop-btn" id="c-916" onclick="setCrop('9:16')">9:16</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="tabs">
+      <button class="tab-btn on" onclick="openTab('captions',this)">Captions</button>
+      <button class="tab-btn" onclick="openTab('style',this)">Style</button>
+    </div>
+
+    <!-- Captions Tab -->
+    <div class="tab-pane on" id="pane-captions">
+      <div class="cap-header">
+        <span class="cap-count" id="cap-count">0 captions</span>
+        <button class="btn btn-ghost btn-sm" id="btn-add">+ Add</button>
+      </div>
+      <div class="cap-list" id="cap-list">
+        <div class="cap-empty" id="cap-empty">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span id="cap-empty-msg">No captions yet.<br>Upload a video to get started.</span>
+          <div class="transcribe-cta" id="transcribe-cta" style="display:none">
+            <button class="btn btn-primary" id="btn-transcribe-cta" onclick="window.triggerTranscribe()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              Auto-Transcribe Audio
+            </button>
+            <p>Powered by Whisper AI · runs in your browser</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Style Tab -->
+    <div class="tab-pane" id="pane-style">
+      <div class="style-panel">
+
+        <div class="sgroup">
+          <div class="slabel">Font Family</div>
+          <select id="s-font" onchange="sty('fontFamily',this.value)">
+            <option value="Inter">Inter (Clean)</option>
+            <option value="Arial">Arial</option>
+            <option value="Impact">Impact</option>
+            <option value="Anton">Anton</option>
+            <option value="Bebas Neue">Bebas Neue</option>
+            <option value="Oswald">Oswald</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Lato">Lato</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Dancing Script">Dancing Script</option>
+            <option value="Pacifico">Pacifico</option>
+            <option value="Permanent Marker">Permanent Marker</option>
+          </select>
+          <div class="font-prev" id="font-prev">Sample Caption</div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Size & Style</div>
+          <div class="srow">
+            <input type="range" id="s-size" min="12" max="96" value="32" oninput="sty('fontSize',+this.value);document.getElementById('v-size').textContent=this.value+'px'">
+            <span class="range-val" id="v-size">32px</span>
+          </div>
+          <div class="srow">
+            <button class="tog on" id="t-bold" onclick="togBold()"><strong>B</strong></button>
+            <button class="tog" id="t-italic" onclick="togItalic()" style="font-style:italic"><em>I</em></button>
+          </div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Text Color</div>
+          <div class="srow">
+            <input type="color" id="s-color" value="#ffffff" oninput="sty('color',this.value);document.getElementById('v-color').textContent=this.value">
+            <span style="font-size:11px;color:var(--text2)" id="v-color">#ffffff</span>
+          </div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Background</div>
+          <div class="srow">
+            <button class="tog on" id="t-bg" onclick="togBg()">Enabled</button>
+            <input type="color" id="s-bgcol" value="#000000" oninput="sty('bgColor',this.value)">
+          </div>
+          <div class="srow" id="bg-opacity-row">
+            <label style="font-size:11px;color:var(--text2);min-width:52px">Opacity</label>
+            <input type="range" id="s-bgop" min="0" max="100" value="60" oninput="sty('bgOpacity',this.value/100);document.getElementById('v-bgop').textContent=this.value+'%'">
+            <span class="range-val" id="v-bgop">60%</span>
+          </div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Text Outline</div>
+          <div class="srow">
+            <button class="tog" id="t-out" onclick="togOutline()">Enabled</button>
+            <input type="color" id="s-outcol" value="#000000" oninput="sty('outlineColor',this.value)">
+          </div>
+          <div class="srow" id="outline-w-row" style="opacity:.4">
+            <label style="font-size:11px;color:var(--text2);min-width:52px">Width</label>
+            <input type="range" id="s-outw" min="1" max="8" value="2" oninput="sty('outlineWidth',+this.value);document.getElementById('v-outw').textContent=this.value+'px'">
+            <span class="range-val" id="v-outw">2px</span>
+          </div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Position</div>
+          <div class="pos-grid">
+            <button class="pos-btn" id="p-tl" onclick="sty('position','tl')">&#x2196; Top L</button>
+            <button class="pos-btn" id="p-tc" onclick="sty('position','tc')">&#x2191; Top</button>
+            <button class="pos-btn" id="p-tr" onclick="sty('position','tr')">&#x2197; Top R</button>
+            <button class="pos-btn" id="p-ml" onclick="sty('position','ml')">&#x2190; Mid L</button>
+            <button class="pos-btn" id="p-mc" onclick="sty('position','mc')">&#x2299; Center</button>
+            <button class="pos-btn" id="p-mr" onclick="sty('position','mr')">&#x2192; Mid R</button>
+            <button class="pos-btn" id="p-bl" onclick="sty('position','bl')">&#x2199; Bot L</button>
+            <button class="pos-btn on" id="p-bc" onclick="sty('position','bc')">&#x2193; Bottom</button>
+            <button class="pos-btn" id="p-br" onclick="sty('position','br')">&#x2198; Bot R</button>
+          </div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Padding</div>
+          <div class="srow">
+            <input type="range" id="s-pad" min="0" max="60" value="12" oninput="sty('padding',+this.value);document.getElementById('v-pad').textContent=this.value+'px'">
+            <span class="range-val" id="v-pad">12px</span>
+          </div>
+        </div>
+
+        <div class="sgroup">
+          <div class="slabel">Preview Text</div>
+          <input type="text" id="prev-txt" value="Sample Caption" style="width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:12px;padding:6px 9px;outline:none" oninput="refreshFontPrev()">
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span id="status-txt">Ready — upload a video to get started</span>
+  <div class="status-prog-wrap" id="status-pw"><div class="status-prog" id="status-p"></div></div>
+  <span class="status-pct" id="status-pct"></span>
+</div>
+
+<!-- Model Loading Overlay -->
+<div class="model-overlay" id="model-overlay">
+  <div class="spinner"></div>
+  <h3 id="mo-title">Loading AI Model</h3>
+  <p id="mo-msg">Downloading Whisper (~244MB).<br>Cached after first use.</p>
+  <div class="model-bar-wrap"><div class="model-bar" id="mo-bar"></div></div>
+  <span id="mo-pct" style="font-size:11px;color:var(--text2)"></span>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-bg" id="export-modal">
+  <div class="modal">
+    <h2>Export Captioned Video</h2>
+    <div class="modal-info">
+      <strong>Real-time export:</strong> The video plays through once while recording.<br>
+      Duration: <strong id="exp-dur">—</strong> &nbsp;&middot;&nbsp; Output: <strong>WebM video</strong><br>
+      <span style="font-size:11px;opacity:.75">Tip: Keep the tab active during export for best results.</span>
+    </div>
+    <div class="srow">
+      <span style="font-size:12px;color:var(--text2)">Crop:</span>
+      <div class="crop-toggle">
+        <button class="crop-btn on" id="ec-orig" onclick="setExpCrop('original')">Original</button>
+        <button class="crop-btn" id="ec-916" onclick="setExpCrop('9:16')">9:16 Portrait</button>
+      </div>
+    </div>
+    <div id="exp-prog-section" style="display:none;flex-direction:column;gap:8px">
+      <div class="exp-prog-wrap"><div class="exp-prog" id="exp-prog"></div></div>
+      <div style="font-size:12px;color:var(--text2)" id="exp-status">Preparing...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+      <button class="btn btn-primary" id="btn-start-exp" onclick="doExport()">
+        &#9654; Start Export
+      </button>
+      <a class="btn btn-primary" id="btn-dl" style="display:none">&#x2193; Download</a>
+    </div>
+  </div>
+</div>
+
+<!-- Model Select Modal -->
+<div class="modal-bg" id="model-modal">
+  <div class="modal">
+    <h2>Whisper Model</h2>
+    <p style="font-size:12px;color:var(--text2)">Larger = more accurate, slower download. Models are cached after first use.</p>
+    <div style="display:flex;flex-direction:column;gap:6px" id="model-opts">
+      <label class="model-opt" data-m="Xenova/whisper-tiny.en">
+        <input type="radio" name="m" value="Xenova/whisper-tiny.en">
+        <div><strong>Whisper Tiny</strong><span class="model-size">39 MB</span><br><span class="model-desc">Fastest &middot; Good for clear audio</span></div>
+      </label>
+      <label class="model-opt" data-m="Xenova/whisper-base.en">
+        <input type="radio" name="m" value="Xenova/whisper-base.en">
+        <div><strong>Whisper Base</strong><span class="model-size">74 MB</span><br><span class="model-desc">Balanced speed &amp; accuracy</span></div>
+      </label>
+      <label class="model-opt on" data-m="Xenova/whisper-small.en">
+        <input type="radio" name="m" value="Xenova/whisper-small.en" checked>
+        <div><strong>Whisper Small</strong><span class="badge">Recommended</span><span class="model-size">244 MB</span><br><span class="model-desc">High accuracy &middot; English</span></div>
+      </label>
+      <label class="model-opt" data-m="Xenova/whisper-medium">
+        <input type="radio" name="m" value="Xenova/whisper-medium">
+        <div><strong>Whisper Medium</strong><span class="model-size">769 MB</span><br><span class="model-desc">Best accuracy &middot; All languages</span></div>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModelModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmModel()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Script ─────────────────────────────────────────────────── -->
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
+env.allowLocalModels = false;
+
+/* ─ State ─────────────────────────────────────────────────────── */
+const S = {
+  file: null, url: null,
+  captions: [],
+  style: {
+    fontFamily:'Inter', fontSize:32, fontWeight:'bold', fontStyle:'normal',
+    color:'#ffffff', bgEnabled:true, bgColor:'#000000', bgOpacity:.6,
+    outlineEnabled:false, outlineColor:'#000000', outlineWidth:2,
+    position:'bc', padding:12,
+  },
+  crop:'original', expCrop:'original',
+  model:'Xenova/whisper-small.en',
+  pipe:null, modelReady:false,
+  transcribing:false, exporting:false,
+  raf:null, uid:0,
+};
+
+/* ─ Helpers ───────────────────────────────────────────────────── */
+const $  = id => document.getElementById(id);
+const ft = s => { if(isNaN(s)||s==null)return'0:00.0'; const m=Math.floor(s/60),sc=(s%60).toFixed(1).padStart(4,'0'); return `${m}:${sc}`; };
+const pt = str => { const x=str.match(/^(\d+):(\d+(?:\.\d+)?)$/); return x?+x[1]*60+parseFloat(x[2]):NaN; };
+const uid= ()=>S.uid++;
+const hexRGB = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+
+function setStatus(msg, pct=null){
+  $('status-txt').textContent=msg;
+  if(pct!==null){ $('status-pw').classList.add('show'); $('status-p').style.width=pct+'%'; $('status-pct').textContent=Math.round(pct)+'%'; }
+  else{ $('status-pw').classList.remove('show'); $('status-pct').textContent=''; }
+}
+
+function wrapText(ctx, text, maxW){
+  const words=text.split(' '), lines=[];
+  let cur='';
+  for(const w of words){ const t=cur?cur+' '+w:w; if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t; }
+  if(cur)lines.push(cur);
+  return lines.length?lines:[''];
+}
+
+/* ─ Canvas & Video ─────────────────────────────────────────────── */
+const vid    = $('vid');
+const canvas = $('main-canvas');
+const ctx    = canvas.getContext('2d');
+
+async function loadVideo(file){
+  S.file=file;
+  if(S.url) URL.revokeObjectURL(S.url);
+  S.url=URL.createObjectURL(file);
+  vid.src=S.url;
+  await new Promise((res,rej)=>{ vid.onloadedmetadata=res; vid.onerror=rej; });
+  canvas.width=vid.videoWidth||1280;
+  canvas.height=vid.videoHeight||720;
+  $('drop-overlay').style.display='none';
+  $('ctrl-bar').style.display='flex';
+  $('btn-transcribe').disabled=false;
+  $('timeline').max=vid.duration;
+  updateTime();
+  setStatus(`Loaded: ${file.name}  (${vid.videoWidth}x${vid.videoHeight} \u00b7 ${ft(vid.duration)})`);
+
+  /* Show the in-panel transcribe CTA when video is loaded and no captions */
+  updateTranscribeCTA();
+
+  if(!S.raf) startLoop();
+}
+
+/* ─ Transcribe CTA visibility ─────────────────────────────────── */
+function updateTranscribeCTA(){
+  const hasVideo = !!S.file;
+  const hasCaptions = S.captions.length > 0;
+  const cta = $('transcribe-cta');
+  const emptyMsg = $('cap-empty-msg');
+
+  if(hasVideo && !hasCaptions && !S.transcribing){
+    cta.style.display='flex';
+    emptyMsg.innerHTML = 'No captions yet.<br>Click below to auto-transcribe from audio.';
+  } else {
+    cta.style.display='none';
+    if(hasVideo && hasCaptions){
+      emptyMsg.innerHTML = 'No captions yet.<br>Upload a video to get started.';
+    } else {
+      emptyMsg.innerHTML = 'No captions yet.<br>Upload a video to get started.';
+    }
+  }
+}
+
+function drawFrame(){
+  const w=canvas.width, h=canvas.height;
+  if(vid.readyState>=2){
+    if(S.crop==='9:16'){
+      const srcH=vid.videoHeight, srcW=Math.round(srcH*9/16);
+      const srcX=Math.floor((vid.videoWidth-srcW)/2);
+      ctx.drawImage(vid, srcX,0,srcW,srcH, 0,0,w,h);
+    } else {
+      ctx.drawImage(vid,0,0,w,h);
+    }
+  } else {
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,w,h);
+  }
+  drawCaptions(ctx,w,h,vid.currentTime);
+}
+
+function startLoop(){ (function loop(){ drawFrame(); S.raf=requestAnimationFrame(loop); })(); }
+
+/* ─ Caption Rendering ─────────────────────────────────────────── */
+function drawCaptions(cx, w, h, t){
+  const cap = S.captions.find(c=>t>=c.s&&t<=c.e);
+  if(!cap) return;
+  const st = S.style;
+  cx.font=`${st.fontStyle==='italic'?'italic ':''} ${st.fontWeight} ${st.fontSize}px "${st.fontFamily}"`;
+  cx.textBaseline='top';
+
+  const maxW = w * 0.88;
+  const lines = wrapText(cx, cap.t.trim()||' ', maxW);
+  const lh = st.fontSize * 1.35;
+  const totalH = lines.length * lh;
+  const pad = st.padding;
+  const pos = st.position;
+
+  /* x alignment */
+  const col = pos.endsWith('l')?'left':pos.endsWith('r')?'right':'center';
+  let bx, align;
+  if(col==='left'){ bx=w*0.06; align='left'; }
+  else if(col==='right'){ bx=w*0.94; align='right'; }
+  else { bx=w/2; align='center'; }
+
+  /* y position */
+  const rowC = pos[0];
+  let by;
+  if(rowC==='t') by=pad+st.fontSize*0.2;
+  else if(rowC==='m') by=(h-totalH)/2;
+  else by=h-totalH-pad-st.fontSize*0.3;
+
+  cx.textAlign=align;
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const ly=by+i*lh;
+
+    if(st.bgEnabled){
+      const m=cx.measureText(line);
+      const bw=m.width+pad*2, bh=lh+pad*0.8;
+      let rx;
+      if(align==='center') rx=bx-bw/2;
+      else if(align==='right') rx=bx-bw;
+      else rx=bx-pad;
+      const [r,g,b]=hexRGB(st.bgColor);
+      cx.fillStyle=`rgba(${r},${g},${b},${st.bgOpacity})`;
+      rrect(cx, rx, ly-pad*0.4, bw, bh, 5);
+      cx.fill();
+    }
+    if(st.outlineEnabled){
+      cx.strokeStyle=st.outlineColor;
+      cx.lineWidth=st.outlineWidth*2;
+      cx.lineJoin='round';
+      cx.strokeText(line,bx,ly);
+    }
+    cx.fillStyle=st.color;
+    cx.fillText(line,bx,ly);
+  }
+}
+
+function rrect(cx,x,y,w,h,r){ cx.beginPath(); cx.moveTo(x+r,y); cx.lineTo(x+w-r,y); cx.quadraticCurveTo(x+w,y,x+w,y+r); cx.lineTo(x+w,y+h-r); cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); cx.lineTo(x+r,y+h); cx.quadraticCurveTo(x,y+h,x,y+h-r); cx.lineTo(x,y+r); cx.quadraticCurveTo(x,y,x+r,y); cx.closePath(); }
+
+/* ─ Video Controls ────────────────────────────────────────────── */
+$('btn-play').onclick=()=>{ vid.paused?vid.play():vid.pause(); };
+vid.onplay=()=>{ $('ico-play').style.display='none'; $('ico-pause').style.display=''; };
+vid.onpause=()=>{ $('ico-play').style.display=''; $('ico-pause').style.display='none'; };
+vid.ontimeupdate=()=>{ $('timeline').value=vid.currentTime; updateTime(); highlightCap(); };
+$('timeline').oninput=()=>{ vid.currentTime=+$('timeline').value; };
+
+function updateTime(){ $('time-disp').textContent=`${ft(vid.currentTime)} / ${ft(vid.duration)}`; }
+
+function highlightCap(){
+  const t=vid.currentTime, active=S.captions.find(c=>t>=c.s&&t<=c.e);
+  document.querySelectorAll('.cap-item').forEach(el=>{
+    const on=active&&el.dataset.id==active.id;
+    el.classList.toggle('active',on);
+    if(on) el.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+}
+
+/* ─ Crop Mode ──────────────────────────────────────────────────── */
+window.setCrop=mode=>{
+  S.crop=mode;
+  if(mode==='9:16'&&vid.videoWidth){ canvas.height=vid.videoHeight; canvas.width=Math.round(vid.videoHeight*9/16); }
+  else if(vid.videoWidth){ canvas.width=vid.videoWidth; canvas.height=vid.videoHeight; }
+  $('c-orig').classList.toggle('on',mode==='original');
+  $('c-916').classList.toggle('on',mode==='9:16');
+};
+window.setExpCrop=mode=>{
+  S.expCrop=mode;
+  $('ec-orig').classList.toggle('on',mode==='original');
+  $('ec-916').classList.toggle('on',mode==='9:16');
+};
+
+/* ─ Audio Extraction ──────────────────────────────────────────── */
+async function extractAudio(file){
+  setStatus('Extracting audio...',8);
+  const ab = await file.arrayBuffer();
+  const actx = new (window.AudioContext||window.webkitAudioContext)();
+  let buf;
+  try{ buf=await actx.decodeAudioData(ab); }
+  catch(e){ throw new Error('Could not decode audio from this file. Try MP4 or WebM.'); }
+  setStatus('Resampling to 16 kHz...',14);
+  const SR=16000, offCtx=new OfflineAudioContext(1, Math.ceil(buf.duration*SR), SR);
+  const src=offCtx.createBufferSource(); src.buffer=buf; src.connect(offCtx.destination); src.start(0);
+  const out=await offCtx.startRendering();
+  actx.close();
+  return out.getChannelData(0);
+}
+
+/* ─ Transcription ──────────────────────────────────────────────── */
+window.triggerTranscribe = doTranscribe;
+
+async function doTranscribe(){
+  if(S.transcribing) return;
+  S.transcribing=true;
+  updateTranscribeCTA(); /* hide CTA while transcribing */
+
+  const btn=$('btn-transcribe');
+  const ctaBtn=$('btn-transcribe-cta');
+  btn.disabled=true;
+  btn.innerHTML=`<div class="spinner" style="width:13px;height:13px;border-width:2px"></div> Transcribing...`;
+  if(ctaBtn) ctaBtn.disabled=true;
+
+  try{
+    if(!S.pipe){
+      showMO(`Loading ${modelName(S.model)}`, `Downloading model (${modelSize(S.model)}).<br>Cached in your browser after first use.`);
+      S.pipe=await pipeline('automatic-speech-recognition', S.model, {
+        progress_callback:p=>{
+          if(p.status==='downloading'){
+            const pct=p.total?Math.round(p.loaded/p.total*100):0;
+            $('mo-bar').style.width=pct+'%';
+            $('mo-pct').textContent=`${pct}%  (${(p.loaded/1048576).toFixed(0)} / ${(p.total/1048576||0).toFixed(0)} MB)`;
+            $('mo-msg').textContent=`Downloading... ${pct}%`;
+          } else if(p.status==='initiate'||p.status==='loading'){
+            $('mo-msg').textContent='Loading model weights...';
+          } else if(p.status==='ready'){
+            $('mo-bar').style.width='100%';
+          }
+        }
+      });
+      hideMO();
+      S.modelReady=true;
+      $('model-dot').style.background='var(--success)';
+    }
+
+    const audio=await extractAudio(S.file);
+    setStatus('Transcribing with Whisper AI...',20);
+
+    const res=await S.pipe(audio,{
+      return_timestamps:true,
+      chunk_length_s:30,
+      stride_length_s:5,
+    });
+
+    const chunks=res.chunks||[];
+    S.captions = chunks.length
+      ? chunks.map(c=>({id:uid(), s:c.timestamp[0]??0, e:c.timestamp[1]??(c.timestamp[0]+3), t:c.text.trim()})).filter(c=>c.t)
+      : [{ id:uid(), s:0, e:vid.duration, t:(res.text||'').trim() }];
+
+    renderList();
+    $('btn-export').disabled=false;
+    setStatus(`Success: ${S.captions.length} captions generated — review and edit below`);
+    openTab('captions', document.querySelector('.tab-btn'));
+
+  } catch(e){
+    console.error(e); hideMO();
+    setStatus('Error: '+e.message);
+    alert('Transcription failed:\n'+e.message);
+  } finally {
+    S.transcribing=false;
+    btn.disabled=false;
+    btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Transcribe`;
+    if(ctaBtn) ctaBtn.disabled=false;
+    updateTranscribeCTA();
+  }
+}
+
+function modelName(m){ return m.split('/')[1]; }
+function modelSize(m){ return({'Xenova/whisper-tiny.en':'~39 MB','Xenova/whisper-base.en':'~74 MB','Xenova/whisper-small.en':'~244 MB','Xenova/whisper-medium':'~769 MB'})[m]||''; }
+function showMO(t,msg){ $('mo-title').textContent=t; $('mo-msg').innerHTML=msg; $('model-overlay').classList.add('show'); $('mo-bar').style.width='0%'; $('mo-pct').textContent=''; }
+function hideMO(){ $('model-overlay').classList.remove('show'); }
+
+/* ─ Caption List ──────────────────────────────────────────────── */
+function renderList(){
+  const list=$('cap-list'), empty=$('cap-empty');
+  list.querySelectorAll('.cap-item').forEach(e=>e.remove());
+  $('cap-count').textContent=`${S.captions.length} caption${S.captions.length!==1?'s':''}`;
+  if(!S.captions.length){ empty.style.display='flex'; updateTranscribeCTA(); return; }
+  empty.style.display='none';
+  S.captions.forEach(c=>list.appendChild(makeCapEl(c)));
+}
+
+function makeCapEl(cap){
+  const d=document.createElement('div');
+  d.className='cap-item'; d.dataset.id=cap.id;
+  d.innerHTML=`
+    <div class="cap-item-top">
+      <div class="time-row">
+        <input class="time-in" value="${ft(cap.s)}" data-f="s" title="Start time">
+        <span class="time-sep">&rarr;</span>
+        <input class="time-in" value="${ft(cap.e)}" data-f="e" title="End time">
+      </div>
+      <button class="btn btn-danger btn-icon" title="Delete caption" style="margin-left:auto">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <textarea class="cap-ta" rows="2">${cap.t}</textarea>`;
+
+  /* seek on click */
+  d.addEventListener('click',e=>{ if(e.target.closest('button')||e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return; vid.currentTime=cap.s; vid.play(); });
+
+  /* time inputs */
+  d.querySelectorAll('.time-in').forEach(inp=>{
+    inp.addEventListener('focus',()=>inp.select());
+    inp.addEventListener('change',()=>{ const v=pt(inp.value); if(!isNaN(v)){cap[inp.dataset.f]=v;inp.value=ft(v);}else inp.value=ft(cap[inp.dataset.f]); });
+  });
+
+  /* textarea */
+  const ta=d.querySelector('.cap-ta');
+  ta.addEventListener('input',()=>{ cap.t=ta.value; ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
+
+  /* delete */
+  d.querySelector('.btn-danger').addEventListener('click',()=>{
+    S.captions=S.captions.filter(c=>c.id!==cap.id);
+    d.remove();
+    $('cap-count').textContent=`${S.captions.length} caption${S.captions.length!==1?'s':''}`;
+    if(!S.captions.length){$('cap-empty').style.display='flex';$('btn-export').disabled=true; updateTranscribeCTA();}
+  });
+  return d;
+}
+
+$('btn-add').addEventListener('click',()=>{
+  const s=vid.currentTime, e=Math.min(s+3,vid.duration||s+3);
+  const cap={id:uid(),s,e,t:'New caption'};
+  S.captions.push(cap);
+  $('cap-empty').style.display='none';
+  const el=makeCapEl(cap);
+  $('cap-list').appendChild(el);
+  el.scrollIntoView({behavior:'smooth'});
+  el.querySelector('.cap-ta').focus();
+  $('cap-count').textContent=`${S.captions.length} caption${S.captions.length!==1?'s':''}`;
+  $('btn-export').disabled=false;
+});
+
+/* ─ Style Controls ────────────────────────────────────────────── */
+window.sty=(k,v)=>{
+  S.style[k]=v;
+  if(k==='position'){
+    document.querySelectorAll('.pos-btn').forEach(b=>b.classList.remove('on'));
+    const el=$('p-'+v); if(el)el.classList.add('on');
+  }
+  refreshFontPrev();
+};
+window.togBold=()=>{ const on=S.style.fontWeight==='bold'; S.style.fontWeight=on?'normal':'bold'; $('t-bold').classList.toggle('on',!on); refreshFontPrev(); };
+window.togItalic=()=>{ const on=S.style.fontStyle==='italic'; S.style.fontStyle=on?'normal':'italic'; $('t-italic').classList.toggle('on',!on); refreshFontPrev(); };
+window.togBg=()=>{ S.style.bgEnabled=!S.style.bgEnabled; $('t-bg').classList.toggle('on',S.style.bgEnabled); $('bg-opacity-row').style.opacity=S.style.bgEnabled?'1':'0.4'; refreshFontPrev(); };
+window.togOutline=()=>{ S.style.outlineEnabled=!S.style.outlineEnabled; $('t-out').classList.toggle('on',S.style.outlineEnabled); $('outline-w-row').style.opacity=S.style.outlineEnabled?'1':'0.4'; refreshFontPrev(); };
+window.refreshFontPrev=refreshFontPrev;
+
+function refreshFontPrev(){
+  const st=S.style, p=$('font-prev'), txt=($('prev-txt').value||'Sample Caption');
+  p.textContent=txt;
+  p.style.fontFamily=`"${st.fontFamily}",sans-serif`;
+  p.style.fontWeight=st.fontWeight;
+  p.style.fontStyle=st.fontStyle;
+  p.style.color=st.color;
+  p.style.fontSize=Math.min(st.fontSize,36)+'px';
+  if(st.bgEnabled){ const[r,g,b]=hexRGB(st.bgColor); p.style.background=`rgba(${r},${g},${b},${st.bgOpacity})`; } else p.style.background='var(--surf3)';
+  p.style.textShadow=st.outlineEnabled?`0 0 ${st.outlineWidth}px ${st.outlineColor},0 0 ${st.outlineWidth*2}px ${st.outlineColor}`:'';
+}
+
+/* ─ Tabs ──────────────────────────────────────────────────────── */
+window.openTab=(name,btn)=>{
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
+  $('pane-'+name).classList.add('on');
+  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.textContent.toLowerCase().includes(name[0])) b.classList.add('on'); });
+  // correct approach: mark by index
+  const btns=document.querySelectorAll('.tab-btn');
+  btns.forEach(b=>b.classList.remove('on'));
+  const idx=name==='captions'?0:1;
+  btns[idx].classList.add('on');
+};
+
+/* ─ Export ────────────────────────────────────────────────────── */
+window.openExportModal=()=>{
+  const dur=vid.duration||0;
+  const m=Math.floor(dur/60), s=Math.round(dur%60);
+  $('exp-dur').textContent=m>0?`${m}m ${s}s`:`${s}s`;
+  $('exp-prog-section').style.display='none';
+  $('btn-start-exp').style.display='';
+  $('btn-dl').style.display='none';
+  $('exp-prog').style.width='0%';
+  S.expCrop=S.crop;
+  $('ec-orig').classList.toggle('on',S.expCrop==='original');
+  $('ec-916').classList.toggle('on',S.expCrop==='9:16');
+  $('export-modal').classList.add('show');
+};
+window.closeExportModal=()=>{ if(!S.exporting)$('export-modal').classList.remove('show'); };
+
+window.doExport=async()=>{
+  if(S.exporting)return;
+  S.exporting=true;
+  $('btn-start-exp').style.display='none';
+  $('exp-prog-section').style.display='flex';
+  $('exp-status').textContent='Setting up canvas...';
+
+  try{
+    /* build export canvas */
+    const ec=document.createElement('canvas');
+    if(S.expCrop==='9:16'){ ec.height=vid.videoHeight; ec.width=Math.round(vid.videoHeight*9/16); }
+    else{ ec.width=vid.videoWidth; ec.height=vid.videoHeight; }
+    const ecx=ec.getContext('2d');
+
+    let rafId;
+    const renderExp=()=>{
+      if(S.expCrop==='9:16'){
+        const sh=vid.videoHeight, sw=Math.round(sh*9/16), sx=Math.floor((vid.videoWidth-sw)/2);
+        ecx.drawImage(vid,sx,0,sw,sh,0,0,ec.width,ec.height);
+      } else ecx.drawImage(vid,0,0,ec.width,ec.height);
+      drawCaptions(ecx,ec.width,ec.height,vid.currentTime);
+      rafId=requestAnimationFrame(renderExp);
+    };
+    renderExp();
+
+    /* streams */
+    const cvStream=ec.captureStream(30);
+    let audioTracks=[];
+    try{
+      const vs=vid.captureStream?vid.captureStream(30):vid.mozCaptureStream(30);
+      audioTracks=[...vs.getAudioTracks()];
+    }catch(e){ console.warn('No audio capture:',e); }
+    const stream=new MediaStream([...cvStream.getVideoTracks(),...audioTracks]);
+
+    /* recorder */
+    const mimes=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    const mime=mimes.find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
+    const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});
+    const chunks=[];
+    rec.ondataavailable=e=>{ if(e.data.size>0)chunks.push(e.data); };
+
+    rec.onstop=()=>{
+      cancelAnimationFrame(rafId);
+      S.exporting=false;
+      const blob=new Blob(chunks,{type:mime});
+      const url=URL.createObjectURL(blob);
+      $('exp-status').textContent=`Done! ${(blob.size/1048576).toFixed(1)} MB`;
+      $('exp-prog').style.width='100%';
+      const dl=$('btn-dl');
+      dl.href=url; dl.download='captioned-video.webm'; dl.style.display='';
+    };
+
+    vid.currentTime=0;
+    await new Promise(r=>setTimeout(r,200));
+    rec.start(500);
+    vid.play();
+    $('exp-status').textContent='Recording — let the video play through...';
+
+    const iv=setInterval(()=>{
+      if(!vid.duration)return;
+      const pct=Math.min((vid.currentTime/vid.duration)*100,99);
+      $('exp-prog').style.width=pct+'%';
+      $('exp-status').textContent=`Recording... ${ft(vid.currentTime)} / ${ft(vid.duration)}`;
+    },400);
+
+    const onEnd=()=>{ clearInterval(iv); cancelAnimationFrame(rafId); if(rec.state!=='inactive')rec.stop(); vid.removeEventListener('ended',onEnd); };
+    vid.addEventListener('ended',onEnd);
+
+  } catch(e){
+    console.error(e); S.exporting=false;
+    $('exp-status').textContent='Failed: '+e.message;
+    alert('Export failed:\n'+e.message);
+  }
+};
+
+/* ─ Model Modal ───────────────────────────────────────────────── */
+window.openModelModal=()=>{
+  document.querySelectorAll('.model-opt').forEach(o=>{ o.classList.toggle('on',o.dataset.m===S.model); o.querySelector('input').checked=(o.dataset.m===S.model); });
+  $('model-modal').classList.add('show');
+};
+window.closeModelModal=()=>$('model-modal').classList.remove('show');
+window.confirmModel=()=>{
+  const r=document.querySelector('#model-opts input:checked');
+  if(r){ S.model=r.value; S.pipe=null; S.modelReady=false; $('model-dot').style.background='var(--text3)'; $('model-label').textContent=modelName(S.model); }
+  closeModelModal();
+};
+document.querySelectorAll('.model-opt').forEach(o=>o.addEventListener('click',()=>{ document.querySelectorAll('.model-opt').forEach(x=>x.classList.remove('on')); o.classList.add('on'); o.querySelector('input').checked=true; }));
+
+/* ─ File Upload ───────────────────────────────────────────────── */
+$('file-in').addEventListener('change',e=>{ const f=e.target.files[0]; if(f)loadVideo(f); e.target.value=''; });
+
+const cw=$('canvas-wrap');
+cw.addEventListener('dragover',e=>{ e.preventDefault(); cw.classList.add('drag-over'); });
+cw.addEventListener('dragleave',()=>cw.classList.remove('drag-over'));
+cw.addEventListener('drop',e=>{ e.preventDefault(); cw.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('video/'))loadVideo(f); });
+
+/* ─ Keyboard Shortcuts ────────────────────────────────────────── */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.code==='Space'){ e.preventDefault(); vid.paused?vid.play():vid.pause(); }
+  if(e.code==='ArrowLeft'){ e.preventDefault(); vid.currentTime=Math.max(0,vid.currentTime-5); }
+  if(e.code==='ArrowRight'){ e.preventDefault(); vid.currentTime=Math.min(vid.duration,vid.currentTime+5); }
+  if(e.code==='ArrowUp'){ e.preventDefault(); vid.currentTime=Math.min(vid.duration,vid.currentTime+1/30); }
+});
+
+/* ─ Init ──────────────────────────────────────────────────────── */
+refreshFontPrev();
+</script>
+</body>
+</html>
