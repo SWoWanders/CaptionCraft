@@ -1,0 +1,3349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>CaptionCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anton&family=Bebas+Neue&family=Oswald:wght@400;600;700&family=Montserrat:wght@400;700;900&family=Lato:wght@400;700;900&family=Playfair+Display:wght@700;900&family=Dancing+Script:wght@700&family=Pacifico&family=Permanent+Marker&family=Archivo+Black&family=Fraunces:wght@700;900&family=Caveat:wght@600;700&family=Roboto:wght@400;700;900&family=Poppins:wght@400;700;900&family=Raleway:wght@400;700;900&family=Bangers&family=Press+Start+2P&family=Russo+One&family=Alfa+Slab+One&family=Black+Ops+One&family=Cinzel:wght@700;900&family=Bowlby+One&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a12;
+  --surf:#13131c;
+  --surf2:#1a1a26;
+  --surf3:#23232f;
+  --surf4:#2d2d3d;
+  --border:#2a2a3a;
+  --border2:#3a3a4d;
+  --accent:#7c5cfc;
+  --accent2:#5b8eff;
+  --accentSoft:rgba(124,92,252,.15);
+  --accentDim:#5a3fd4;
+  --text:#eef0f5;
+  --text2:#9696b0;
+  --text3:#5a5a72;
+  --success:#4ade80;
+  --warn:#fbbf24;
+  --err:#f87171;
+  --r:10px;
+  --r2:14px;
+  --safe-bottom:env(safe-area-inset-bottom, 0px);
+  --safe-top:env(safe-area-inset-top, 0px);
+}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  display:flex;
+  flex-direction:column;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+button,input,select,textarea{font-family:inherit;color:inherit;border:none;outline:none;background:transparent}
+button{cursor:pointer}
+
+/* ───── Top bar ───── */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:max(10px, calc(var(--safe-top) + 6px)) 14px 10px;
+  background:var(--surf);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  z-index:10;
+}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-.3px}
+.brand-icon{
+  width:28px;height:28px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+}
+.topbar-actions{margin-left:auto;display:flex;gap:6px}
+.icon-btn{
+  width:36px;height:36px;
+  border-radius:10px;
+  background:var(--surf2);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text);
+  transition:background .15s;
+}
+.icon-btn:active{background:var(--surf3)}
+.icon-btn.primary{background:var(--accent);color:#fff}
+.icon-btn.primary:active{background:var(--accentDim)}
+.icon-btn:disabled{opacity:.3;pointer-events:none}
+
+/* ───── Stage (video) ───── */
+.stage{
+  flex:0 0 auto;
+  background:#000;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  /* Default size when empty */
+  height:32vh;
+  min-height:180px;
+  max-height:55vh;
+  width:100%;
+}
+/* When video loaded, stage sizes to fit canvas without leaving black bars */
+.stage.has-video{
+  height:auto;
+  max-height:55vh;
+}
+.stage.has-video #preview-canvas{
+  display:block;
+  max-width:100%;
+  max-height:55vh;
+  width:auto;
+  height:auto;
+}
+.stage.empty{
+  background:linear-gradient(135deg,#0a0a12,#13131c);
+  cursor:pointer;
+}
+#preview-canvas{display:block;max-width:100%;max-height:100%}
+.stage-empty{
+  position:absolute;
+  inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;
+  padding:24px;text-align:center;color:var(--text2);
+  width:100%;
+}
+.stage-empty .icon{
+  width:72px;height:72px;border-radius:50%;
+  border:2px dashed var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);
+}
+.stage-empty h2{font-size:16px;font-weight:700;color:var(--text)}
+.stage-empty p{font-size:12px;color:var(--text3);max-width:260px;line-height:1.5}
+.stage-empty .pick-btn{
+  margin-top:8px;
+  background:var(--accent);color:#fff;
+  padding:10px 22px;border-radius:24px;
+  font-weight:700;font-size:13px;
+}
+
+/* Video controls overlay on stage */
+.stage-ctrl{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:linear-gradient(to top, rgba(0,0,0,.7), transparent);
+  color:#fff;
+  opacity:0;transition:opacity .2s;
+}
+.stage:hover .stage-ctrl,.stage.show-ctrl .stage-ctrl{opacity:1}
+.stage-ctrl.always{opacity:1}
+.play-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.95);color:#000;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.play-btn svg{display:block}
+.timeline{
+  flex:1;
+  -webkit-appearance:none;appearance:none;
+  height:3px;background:rgba(255,255,255,.25);
+  border-radius:2px;
+  outline:none;margin:0;
+}
+.timeline::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;
+}
+.timeline::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;border:none;
+}
+.time-label{font-size:11px;font-variant-numeric:tabular-nums;font-weight:600;min-width:88px;text-align:right}
+
+/* Crop pill (bottom right of stage) */
+.crop-pill{
+  position:absolute;top:10px;right:10px;
+  display:flex;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);
+  border-radius:999px;padding:3px;
+}
+.crop-pill button{
+  padding:5px 10px;border-radius:999px;
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.7);
+  letter-spacing:.04em;
+}
+.crop-pill button.on{background:var(--accent);color:#fff}
+
+/* ───── Tab content area ───── */
+.tabs{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0;
+  background:var(--bg);
+}
+.tab-pane{
+  display:none;
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.tab-pane.on{display:flex;flex-direction:column}
+.section{
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  flex:1 0 auto; /* fill available space; prevents blank gaps */
+}
+
+/* Tab bar (bottom navigation) */
+.tabbar{
+  display:flex;
+  border-top:1px solid var(--border);
+  background:var(--surf);
+  padding-bottom:var(--safe-bottom);
+  flex-shrink:0;
+}
+.tabbar button{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 4px 7px;
+  font-size:10px;font-weight:600;
+  color:var(--text3);
+  position:relative;
+  letter-spacing:.02em;
+}
+.tabbar button.on{color:var(--accent)}
+.tabbar button.on::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:32px;height:2px;background:var(--accent);border-radius:0 0 3px 3px;
+}
+.tabbar button svg{width:22px;height:22px}
+.tabbar button[disabled]{opacity:.35;pointer-events:none}
+
+/* ───── Cards / panels ───── */
+.card{
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  padding:14px;
+}
+.card-title{
+  font-size:11px;font-weight:700;
+  color:var(--text2);
+  text-transform:uppercase;letter-spacing:.06em;
+  margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.card-title-r{font-size:11px;color:var(--text3);font-weight:500;text-transform:none;letter-spacing:0}
+
+/* ───── Buttons ───── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 16px;
+  border-radius:var(--r);
+  font-weight:600;font-size:13px;
+  transition:transform .1s,background .15s;
+  white-space:nowrap;text-decoration:none;
+}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accentDim)}
+.btn-secondary{background:var(--surf3);color:var(--text);border:1px solid var(--border)}
+.btn-ghost{background:transparent;color:var(--text2)}
+.btn-ghost:hover{background:var(--surf2);color:var(--text)}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--err);border:1px solid rgba(248,113,113,.2)}
+.btn-danger:hover{background:rgba(248,113,113,.2)}
+.btn-sm{padding:7px 12px;font-size:12px}
+.btn-lg{padding:14px 24px;font-size:14px}
+.btn-block{display:flex;width:100%}
+
+/* ───── Source tab ───── */
+.source-actions{display:flex;flex-direction:column;gap:10px}
+.source-btn{
+  background:var(--surf);
+  border:1px solid var(--border);
+  padding:14px;
+  border-radius:var(--r2);
+  display:flex;align-items:center;gap:14px;
+  text-align:left;width:100%;
+  transition:all .15s;
+}
+.source-btn:active{background:var(--surf2)}
+.source-btn .src-ico{
+  width:44px;height:44px;
+  background:var(--accentSoft);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);
+  flex-shrink:0;
+}
+.source-btn .src-body{flex:1;min-width:0}
+.source-btn .src-title{font-weight:700;font-size:14px;margin-bottom:2px}
+.source-btn .src-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.source-btn .src-pill{
+  display:inline-block;
+  font-size:9px;letter-spacing:.05em;font-weight:700;
+  padding:2px 6px;border-radius:8px;
+  margin-left:6px;text-transform:uppercase;vertical-align:middle;
+}
+.src-pill.fast{background:#7c5cfc;color:#fff}
+.src-pill.local{background:rgba(74,222,128,.2);color:var(--success)}
+.src-pill.beta{background:rgba(251,191,36,.2);color:var(--warn)}
+
+.video-info{
+  background:var(--surf2);
+  border-radius:var(--r);
+  padding:10px 12px;
+  font-size:11px;color:var(--text2);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.video-info strong{color:var(--text);font-weight:600}
+
+/* ───── Captions list ───── */
+.caps-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:50px 20px;
+  text-align:center;color:var(--text3);gap:12px;
+}
+.caps-empty svg{opacity:.4}
+.caps-empty p{font-size:12px;line-height:1.5}
+.caps-empty .empty-action{
+  margin-top:8px;color:var(--accent);font-weight:600;font-size:13px;
+}
+.cap-list{
+  display:flex;flex-direction:column;gap:6px;
+  padding-bottom:80px;
+}
+.cap-item{
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:10px 12px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:all .15s;
+}
+.cap-item.active{
+  border-color:var(--accent);
+  background:rgba(124,92,252,.06);
+  box-shadow:0 0 0 1px var(--accent);
+}
+.cap-times{display:flex;align-items:center;gap:4px}
+.cap-time-in{
+  background:var(--surf2);
+  padding:5px 8px;
+  border-radius:6px;
+  width:64px;
+  font-family:ui-monospace,monospace;font-size:11px;
+  text-align:center;
+  border:1px solid transparent;
+  transition:border .15s;
+}
+.cap-time-in:focus{border-color:var(--accent);background:var(--surf3)}
+.cap-arrow{color:var(--text3);font-size:12px}
+.cap-spacer{flex:1}
+.cap-actions{display:flex;gap:2px}
+.cap-actions button{
+  width:32px;height:32px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+}
+.cap-actions button:active{background:var(--surf3)}
+.cap-actions .delete:hover,.cap-actions .delete:active{color:var(--err);background:rgba(248,113,113,.1)}
+.cap-text{
+  width:100%;
+  background:transparent;
+  font-size:13px;line-height:1.5;
+  resize:none;
+  min-height:24px;
+  padding:0;
+}
+
+.add-cap-fab{
+  position:fixed;
+  right:14px;
+  bottom:calc(60px + var(--safe-bottom) + 14px);
+  width:54px;height:54px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 6px 20px rgba(124,92,252,.4);
+  z-index:50;
+}
+.add-cap-fab.show{display:flex}
+.add-cap-fab:active{transform:scale(.92)}
+
+/* ───── Style tab (lots of customization) ───── */
+.style-grid{display:flex;flex-direction:column;gap:12px}
+.preset-row{
+  display:flex;gap:8px;overflow-x:auto;
+  padding-bottom:6px;
+  margin:-4px;padding:4px;
+  scroll-snap-type:x mandatory;
+}
+.preset-row::-webkit-scrollbar{height:4px}
+.preset{
+  flex-shrink:0;
+  width:78px;height:54px;
+  background:#222;
+  border:2px solid var(--border);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  scroll-snap-align:start;
+  transition:border .15s;
+}
+.preset.on{border-color:var(--accent)}
+.preset-label{
+  position:absolute;bottom:0;left:0;right:0;
+  font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  background:rgba(0,0,0,.6);color:#fff;
+  padding:2px;text-align:center;
+}
+.preset-text{font-size:14px;font-weight:900;line-height:1;padding:0 4px}
+
+/* Saved presets list */
+.saved-preset{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surf2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:10px 12px;
+  transition:border .15s;
+}
+.saved-preset.active{border-color:var(--accent);background:var(--accentSoft)}
+.saved-preset-prev{
+  width:42px;height:32px;
+  background:#222;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:hidden;
+}
+.saved-preset-prev span{font-size:14px;font-weight:900;line-height:1}
+.saved-preset-name{
+  flex:1;
+  background:transparent;
+  font-size:13px;font-weight:600;
+  padding:4px 6px;
+  border-radius:4px;
+  border:1px solid transparent;
+  min-width:0;
+}
+.saved-preset-name:focus{border-color:var(--border2);background:var(--surf3)}
+.saved-preset-actions{display:flex;gap:2px;flex-shrink:0}
+.saved-preset-actions button{
+  width:30px;height:30px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+}
+.saved-preset-actions button:active{background:var(--surf3)}
+.saved-preset-actions .delete:hover,.saved-preset-actions .delete:active{color:var(--err);background:rgba(248,113,113,.1)}
+.saved-empty{
+  font-size:11px;color:var(--text3);
+  text-align:center;padding:14px 8px;line-height:1.6;
+}
+
+.style-row{
+  display:grid;
+  gap:8px;
+  margin-bottom:10px;
+}
+.style-row:last-child{margin-bottom:0}
+.style-row label{
+  font-size:11px;color:var(--text2);font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.style-row label .v{
+  font-variant-numeric:tabular-nums;
+  background:var(--surf2);
+  padding:2px 7px;border-radius:5px;
+  color:var(--text);font-weight:700;font-size:10px;
+}
+
+select{
+  width:100%;background:var(--surf2);
+  padding:10px 12px;border-radius:var(--r);
+  font-size:13px;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239696b0' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  padding-right:32px;
+}
+input[type="text"],input[type="password"],input[type="number"]{
+  width:100%;background:var(--surf2);
+  padding:10px 12px;border-radius:var(--r);
+  font-size:13px;
+  border:1px solid transparent;transition:border .15s;
+}
+input[type="text"]:focus,input[type="password"]:focus,input[type="number"]:focus{
+  border-color:var(--accent);background:var(--surf3);
+}
+input[type="range"]{
+  width:100%;height:32px;
+  -webkit-appearance:none;appearance:none;
+  background:transparent;
+  /* Allow vertical scrolling to take priority over slider drags */
+  touch-action:pan-y;
+}
+/* When user has explicitly tapped a slider, allow horizontal drag */
+input[type="range"].active{
+  touch-action:none;
+}
+input[type="range"]::-webkit-slider-runnable-track{
+  height:4px;background:var(--surf3);border-radius:3px;
+}
+input[type="range"]::-moz-range-track{
+  height:4px;background:var(--surf3);border-radius:3px;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:var(--accent);
+  margin-top:-8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+input[type="range"]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--accent);border:none;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+
+/* Color picker rows */
+.color-pick{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surf2);border-radius:var(--r);padding:4px;
+}
+.color-pick input[type="color"]{
+  -webkit-appearance:none;appearance:none;
+  width:38px;height:32px;border-radius:6px;
+  border:1px solid var(--border2);
+  background:transparent;cursor:pointer;padding:0;
+}
+.color-pick input[type="color"]::-webkit-color-swatch-wrapper{padding:0}
+.color-pick input[type="color"]::-webkit-color-swatch{border:none;border-radius:5px}
+.color-pick input[type="text"]{
+  background:transparent;
+  font-family:ui-monospace,monospace;
+  font-size:11px;padding:0 6px;
+  border:none;
+  flex:1;min-width:0;
+}
+
+/* Toggle pill row */
+.pill-row{
+  display:flex;background:var(--surf2);border-radius:var(--r);padding:3px;gap:2px;
+}
+.pill-row button{
+  flex:1;
+  padding:7px 6px;
+  border-radius:7px;
+  font-size:11px;font-weight:600;color:var(--text2);
+  transition:all .15s;
+}
+.pill-row button.on{background:var(--surf4);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+
+.toggle{
+  position:relative;
+  width:44px;height:24px;
+  background:var(--surf3);
+  border-radius:14px;
+  flex-shrink:0;
+  transition:background .15s;
+}
+.toggle::after{
+  content:'';
+  position:absolute;
+  top:2px;left:2px;
+  width:20px;height:20px;
+  background:#fff;border-radius:50%;
+  transition:transform .15s;
+}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{transform:translateX(20px)}
+
+.row-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+.row-toggle .lbl{font-size:13px;font-weight:500}
+
+/* Position 3x3 grid */
+.pos-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:4px;background:var(--surf2);padding:5px;border-radius:var(--r);
+}
+.pos-btn{
+  aspect-ratio:5/3;
+  background:var(--surf3);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);font-size:12px;
+  transition:all .15s;
+}
+.pos-btn.on{background:var(--accent);color:#fff}
+
+/* ───── Export tab ───── */
+.export-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.info-tile{
+  background:var(--surf2);
+  border-radius:var(--r);
+  padding:10px;
+  text-align:center;
+}
+.info-tile .lbl{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.info-tile .v{font-size:14px;font-weight:700;color:var(--text)}
+
+.format-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.format-card{
+  background:var(--surf2);
+  border:2px solid transparent;
+  border-radius:var(--r);
+  padding:12px;
+  text-align:left;
+  transition:all .15s;
+}
+.format-card.on{border-color:var(--accent);background:var(--accentSoft)}
+.format-card .fmt-name{font-weight:700;font-size:14px;margin-bottom:4px}
+.format-card .fmt-desc{font-size:10px;color:var(--text3);line-height:1.4}
+
+.export-status{
+  background:var(--surf2);
+  border-radius:var(--r);
+  padding:14px;
+  margin-top:14px;
+  display:none;
+}
+.export-status.show{display:block}
+.pbar{height:6px;background:var(--surf3);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;width:0%}
+.export-status .stat{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+
+.tip-box{
+  background:rgba(251,191,36,.08);
+  border:1px solid rgba(251,191,36,.25);
+  border-radius:var(--r);
+  padding:10px 12px;
+  font-size:11px;color:var(--warn);line-height:1.5;
+}
+
+/* ───── Modals ───── */
+.modal-bg{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.65);
+  z-index:200;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-bg.show{display:flex}
+.modal-bg.center{align-items:center}
+.sheet{
+  background:var(--surf);
+  border-radius:var(--r2) var(--r2) 0 0;
+  width:100%;
+  max-width:500px;
+  max-height:90vh;
+  padding:18px;
+  padding-bottom:max(18px, calc(var(--safe-bottom) + 14px));
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  animation:slideUp .25s ease-out;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;
+}
+.sheet-header h2{font-size:17px;font-weight:700}
+.sheet-header .close{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--surf3);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+}
+
+/* ───── Loading overlay ───── */
+.loader{
+  position:fixed;inset:0;
+  background:rgba(10,10,18,.94);
+  z-index:300;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:24px;
+  backdrop-filter:blur(6px);
+}
+.loader.show{display:flex}
+.spin{
+  width:44px;height:44px;
+  border:3px solid var(--border2);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader h3{font-size:15px;font-weight:700}
+.loader p{font-size:12px;color:var(--text2);text-align:center;max-width:280px;line-height:1.6}
+.loader-bar{width:240px;height:5px;background:var(--surf3);border-radius:3px;overflow:hidden}
+.loader-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;width:0%}
+.loader-pct{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
+
+/* ───── Toast ───── */
+.toast{
+  position:fixed;
+  bottom:calc(80px + var(--safe-bottom));
+  left:50%;transform:translateX(-50%) translateY(180%);
+  background:var(--surf3);
+  border:1px solid var(--border2);
+  color:var(--text);
+  padding:10px 18px;
+  border-radius:24px;
+  font-size:12px;font-weight:500;
+  z-index:400;
+  transition:transform .25s;
+  max-width:90vw;text-align:center;
+  box-shadow:0 6px 24px rgba(0,0,0,.5);
+  visibility:hidden;
+}
+.toast.show{transform:translateX(-50%) translateY(0);visibility:visible}
+.toast.ok{border-color:var(--success);color:var(--success)}
+.toast.err{border-color:var(--err);color:var(--err)}
+.toast.warn{border-color:var(--warn);color:var(--warn)}
+
+/* Desktop tweaks */
+@media (min-width:780px){
+  body{font-size:14px}
+  .stage{height:50vh;max-height:60vh}
+  .topbar{padding:14px 20px}
+  .section{padding:18px 24px;max-width:680px;margin:0 auto;width:100%}
+  .tabbar{max-width:680px;margin:0 auto;width:100%;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">✦</div>
+    <span>CaptionCraft</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" id="btn-settings" title="Settings" aria-label="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Stage / video preview -->
+<div class="stage empty" id="stage">
+  <canvas id="preview-canvas"></canvas>
+  <div class="stage-empty" id="stage-empty">
+    <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+    <h2>Drop or pick a video below</h2>
+    <p>MP4, MOV, WebM. Everything happens in your browser.</p>
+  </div>
+  <div class="stage-ctrl always" id="stage-ctrl" style="display:none">
+    <button class="play-btn" id="play-btn" aria-label="Play">
+      <svg id="ico-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg id="ico-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    </button>
+    <input type="range" class="timeline" id="timeline" min="0" max="100" value="0" step="0.01">
+    <div class="time-label" id="time-label">0:00 / 0:00</div>
+  </div>
+  <div class="crop-pill" id="crop-pill" style="display:none">
+    <button data-crop="original" class="on">ORIG</button>
+    <button data-crop="9:16">9:16</button>
+    <button data-crop="1:1">1:1</button>
+  </div>
+</div>
+
+<!-- Tab content -->
+<div class="tabs">
+  <!-- SOURCE TAB -->
+  <div class="tab-pane on" id="pane-source">
+    <div class="section">
+      <div class="card">
+        <div class="card-title">Video <span class="card-title-r" id="video-info-r">Not loaded</span></div>
+        <button class="btn btn-secondary btn-block" id="btn-pick-video">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="btn-pick-label">Choose Video</span>
+        </button>
+      </div>
+
+      <div class="card" id="trim-card" style="display:none">
+        <div class="card-title">
+          <span>Trim Silence</span>
+          <span class="card-title-r" id="trim-status">Off</span>
+        </div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px">
+          Removes silent gaps so the exported video only contains speech. Uses Groq Whisper word-level timestamps for precision. Captions are re-timed to the trimmed video.
+        </p>
+        <button class="btn btn-secondary btn-block" id="btn-detect-groq">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+          <span>Detect speech regions</span>
+        </button>
+
+        <div id="trim-controls" style="display:none;margin-top:12px">
+          <div class="style-row">
+            <label>Padding before/after speech <span class="v" id="v-pad-speech">0.15s</span></label>
+            <input type="range" id="trim-padspeech" min="0" max="0.5" value="0.15" step="0.05">
+          </div>
+          <div style="background:var(--surf2);border-radius:var(--r);padding:10px 12px;margin-top:8px;font-size:11px;color:var(--text2);line-height:1.6">
+            <div style="display:flex;justify-content:space-between"><span>Speech regions</span><strong style="color:var(--text)" id="trim-regions">—</strong></div>
+            <div style="display:flex;justify-content:space-between"><span>Original duration</span><strong style="color:var(--text)" id="trim-orig">—</strong></div>
+            <div style="display:flex;justify-content:space-between"><span>Trimmed duration</span><strong style="color:var(--success)" id="trim-trimmed">—</strong></div>
+            <div style="display:flex;justify-content:space-between"><span>Time saved</span><strong style="color:var(--accent2)" id="trim-saved">—</strong></div>
+          </div>
+          <div class="row-toggle" style="margin-top:8px">
+            <span class="lbl">Apply trim on export</span>
+            <div class="toggle on" id="t-trim"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="vfx-card" style="display:none">
+        <div class="card-title">
+          <span>Voice FX <span style="background:rgba(124,92,252,.2);color:var(--accent2);font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;letter-spacing:.04em;margin-left:4px">EXPERIMENTAL</span></span>
+          <span class="card-title-r" id="vfx-status">Off</span>
+        </div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px">
+          Auto-tune the voice in your video to follow a melody — like Cher or T-Pain. The melody itself is silent in the export by default; only the pitch-shifted vocal is recorded.
+        </p>
+        <div class="row-toggle" style="margin-bottom:10px">
+          <span class="lbl">Enable Voice FX on export</span>
+          <div class="toggle" id="t-vfx"></div>
+        </div>
+        <div id="vfx-controls" style="display:none">
+          <div class="style-row">
+            <label>Melody</label>
+            <select id="vfx-melody">
+              <option value="uplifting">Uplifting (C major, 110 BPM)</option>
+              <option value="melancholy">Melancholy (A minor, 75 BPM)</option>
+              <option value="heroic">Heroic (D major, 130 BPM)</option>
+              <option value="dreamy">Dreamy (F lydian, 90 BPM)</option>
+              <option value="trap">Trap (G minor, 140 BPM)</option>
+            </select>
+          </div>
+          <div class="style-row">
+            <label>Tune strength <span class="v" id="v-vfx-strength">85</span>%</label>
+            <input type="range" id="vfx-strength" min="0" max="100" value="85" step="5">
+          </div>
+          <div class="style-row">
+            <label>Note duration <span class="v" id="v-vfx-notedur">1/4</span></label>
+            <input type="range" id="vfx-notedur" min="0" max="3" value="1" step="1">
+          </div>
+          <div class="style-row">
+            <label>Melody volume in export <span class="v" id="v-vfx-melvol">0</span>%</label>
+            <input type="range" id="vfx-melvol" min="0" max="100" value="0" step="5">
+          </div>
+          <button class="btn btn-secondary btn-block" id="btn-vfx-preview" style="margin-top:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Preview 5s sample</span>
+          </button>
+          <div style="font-size:10px;color:var(--text3);line-height:1.5;margin-top:8px">
+            Tip: Strength 70–90% sounds natural; 100% is robotic/T-Pain. Increase melody volume to mix in soft background music.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Add Captions</div>
+        <div class="source-actions">
+          <button class="source-btn" data-method="groq">
+            <div class="src-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></div>
+            <div class="src-body">
+              <div class="src-title">Cloud Whisper <span class="src-pill fast">RECOMMENDED</span></div>
+              <div class="src-desc">Highest accuracy. Free with a Groq API key (~150× realtime).</div>
+            </div>
+          </button>
+          <button class="source-btn" id="btn-import-srt">
+            <div class="src-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="src-body">
+              <div class="src-title">Import SRT/VTT</div>
+              <div class="src-desc">Upload an existing caption file from elsewhere.</div>
+            </div>
+          </button>
+        </div>
+        <div id="quota-panel" style="display:none;margin-top:12px;background:var(--surf2);border-radius:var(--r);padding:10px 12px;font-size:11px;line-height:1.6">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <strong style="color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:10px">Groq Whisper · Free tier</strong>
+            <span id="quota-reset" style="color:var(--text3);font-size:10px"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Audio remaining</span><strong style="color:var(--text)" id="quota-audio">—</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Requests remaining</span><strong style="color:var(--text)" id="quota-req">—</strong></div>
+          <div style="background:var(--surf3);height:4px;border-radius:2px;overflow:hidden;margin-top:6px"><div id="quota-bar" style="height:100%;background:linear-gradient(90deg,var(--success),var(--accent2));width:100%;transition:width .3s"></div></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">No charges if you exceed — Groq returns errors instead.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPTIONS TAB -->
+  <div class="tab-pane" id="pane-captions">
+    <div class="section">
+      <div class="card">
+        <div class="card-title">
+          <span><span id="cap-count">0</span> captions</span>
+          <button class="btn btn-ghost btn-sm" id="btn-export-srt" style="padding:4px 10px;font-size:11px">Export SRT</button>
+        </div>
+        <div class="cap-list" id="cap-list">
+          <div class="caps-empty" id="caps-empty">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <p>No captions yet. Use one of the methods<br>in the <strong style="color:var(--text)">Source</strong> tab to get started.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="add-cap-fab" id="btn-add-cap" aria-label="Add caption" title="Add caption at current time">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- STYLE TAB -->
+  <div class="tab-pane" id="pane-style">
+    <div class="section">
+      <div class="card">
+        <div class="card-title">
+          <span>My Presets</span>
+          <button class="btn btn-ghost btn-sm" id="btn-save-preset" style="padding:4px 10px;font-size:11px">+ Save current</button>
+        </div>
+        <div id="my-presets" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Built-in Presets</div>
+        <div class="preset-row" id="preset-row"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Font</div>
+        <div class="style-row">
+          <select id="s-font">
+            <optgroup label="Bold Display">
+              <option value="Anton">Anton</option>
+              <option value="Bebas Neue">Bebas Neue</option>
+              <option value="Archivo Black">Archivo Black</option>
+              <option value="Bowlby One">Bowlby One</option>
+              <option value="Russo One">Russo One</option>
+              <option value="Bangers">Bangers</option>
+              <option value="Black Ops One">Black Ops One</option>
+              <option value="Alfa Slab One">Alfa Slab One</option>
+              <option value="Oswald">Oswald</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Raleway">Raleway</option>
+              <option value="Lato">Lato</option>
+              <option value="Impact">Impact</option>
+            </optgroup>
+            <optgroup label="Clean Sans">
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="system-ui">System UI</option>
+              <option value="Arial">Arial</option>
+              <option value="Helvetica">Helvetica</option>
+            </optgroup>
+            <optgroup label="Serif & Stylish">
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Fraunces">Fraunces</option>
+              <option value="Cinzel">Cinzel</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times</option>
+            </optgroup>
+            <optgroup label="Handwritten">
+              <option value="Caveat">Caveat</option>
+              <option value="Dancing Script">Dancing Script</option>
+              <option value="Pacifico">Pacifico</option>
+              <option value="Permanent Marker">Permanent Marker</option>
+            </optgroup>
+            <optgroup label="Display & Fun">
+              <option value="Press Start 2P">Press Start 2P</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="pill-row" style="margin-top:8px">
+          <button data-style-tog="bold" id="t-bold"><strong>B</strong> Bold</button>
+          <button data-style-tog="italic" id="t-italic"><em>I</em> Italic</button>
+          <button data-style-tog="upper" id="t-upper">A·B·C</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Size & Spacing</div>
+        <div class="style-row">
+          <label>Font size <span class="v" id="v-size">48</span></label>
+          <input type="range" id="s-size" min="16" max="160" value="48" step="1">
+        </div>
+        <div class="style-row">
+          <label>Line height <span class="v" id="v-lh">1.25</span></label>
+          <input type="range" id="s-lh" min="0.9" max="2" value="1.25" step="0.05">
+        </div>
+        <div class="style-row">
+          <label>Letter spacing <span class="v" id="v-ls">0</span></label>
+          <input type="range" id="s-ls" min="-3" max="15" value="0" step="0.5">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Text Color</div>
+        <div class="color-pick">
+          <input type="color" id="s-color" value="#ffffff">
+          <input type="text" id="s-color-t" value="#ffffff" maxlength="7" spellcheck="false">
+        </div>
+        <div class="row-toggle" style="margin-top:10px">
+          <span class="lbl">Gradient text</span>
+          <div class="toggle" id="t-gradient"></div>
+        </div>
+        <div id="grad-controls" style="display:none;margin-top:8px">
+          <div class="color-pick">
+            <input type="color" id="s-color2" value="#ffd700">
+            <input type="text" id="s-color2-t" value="#ffd700" maxlength="7" spellcheck="false">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Outline</div>
+        <div class="color-pick" style="margin-bottom:8px">
+          <input type="color" id="s-outline" value="#000000">
+          <input type="text" id="s-outline-t" value="#000000" maxlength="7" spellcheck="false">
+        </div>
+        <div class="style-row">
+          <label>Width <span class="v" id="v-outw">3</span></label>
+          <input type="range" id="s-outw" min="0" max="14" value="3" step="0.5">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Shadow & Glow</div>
+        <div class="row-toggle">
+          <span class="lbl">Drop shadow</span>
+          <div class="toggle" id="t-shadow"></div>
+        </div>
+        <div id="shadow-controls" style="display:none">
+          <div class="color-pick" style="margin:8px 0">
+            <input type="color" id="s-shadow-color" value="#000000">
+            <input type="text" id="s-shadow-color-t" value="#000000" maxlength="7" spellcheck="false">
+          </div>
+          <div class="style-row">
+            <label>Blur <span class="v" id="v-sb">8</span></label>
+            <input type="range" id="s-shadow-blur" min="0" max="40" value="8" step="1">
+          </div>
+          <div class="style-row">
+            <label>Offset Y <span class="v" id="v-so">3</span></label>
+            <input type="range" id="s-shadow-y" min="-20" max="20" value="3" step="1">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Background</div>
+        <div class="row-toggle">
+          <span class="lbl">Show background</span>
+          <div class="toggle" id="t-bg"></div>
+        </div>
+        <div id="bg-controls" style="display:none">
+          <div class="color-pick" style="margin:8px 0">
+            <input type="color" id="s-bg" value="#000000">
+            <input type="text" id="s-bg-t" value="#000000" maxlength="7" spellcheck="false">
+          </div>
+          <div class="style-row">
+            <label>Opacity <span class="v" id="v-bgo">60</span>%</label>
+            <input type="range" id="s-bgo" min="0" max="100" value="60" step="1">
+          </div>
+          <div class="style-row">
+            <label>Padding <span class="v" id="v-bgp">12</span></label>
+            <input type="range" id="s-bgp" min="0" max="40" value="12" step="1">
+          </div>
+          <div class="style-row">
+            <label>Corner radius <span class="v" id="v-bgr">8</span></label>
+            <input type="range" id="s-bgr" min="0" max="40" value="8" step="1">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Position</div>
+        <div class="pos-grid">
+          <button class="pos-btn" data-pos="tl">↖</button>
+          <button class="pos-btn" data-pos="tc">↑</button>
+          <button class="pos-btn" data-pos="tr">↗</button>
+          <button class="pos-btn" data-pos="ml">←</button>
+          <button class="pos-btn" data-pos="mc">●</button>
+          <button class="pos-btn" data-pos="mr">→</button>
+          <button class="pos-btn" data-pos="bl">↙</button>
+          <button class="pos-btn on" data-pos="bc">↓</button>
+          <button class="pos-btn" data-pos="br">↘</button>
+        </div>
+        <div class="style-row" style="margin-top:10px">
+          <label>Edge padding <span class="v" id="v-pad">28</span></label>
+          <input type="range" id="s-pad" min="8" max="120" value="28" step="2">
+        </div>
+        <div class="style-row">
+          <label>Vertical offset <span class="v" id="v-voff">0</span></label>
+          <input type="range" id="s-voff" min="-100" max="100" value="0" step="2">
+        </div>
+        <div class="style-row">
+          <label>Max width <span class="v" id="v-mw">90</span>%</label>
+          <input type="range" id="s-mw" min="50" max="100" value="90" step="2">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Animation</div>
+        <select id="s-anim" style="margin-bottom:8px">
+          <option value="none">None (just appear)</option>
+          <option value="fade">Fade in</option>
+          <option value="pop">Pop in (scale)</option>
+          <option value="slide-up">Slide up</option>
+          <option value="slide-down">Slide down</option>
+          <option value="typewriter">Type-on (word by word)</option>
+        </select>
+        <div class="style-row">
+          <label>Speed <span class="v" id="v-anim">280</span>ms</label>
+          <input type="range" id="s-anim-dur" min="80" max="800" value="280" step="20">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT TAB -->
+  <div class="tab-pane" id="pane-export">
+    <div class="section">
+      <div class="card">
+        <div class="card-title">Export Video</div>
+        <div class="export-info">
+          <div class="info-tile"><div class="lbl">Duration</div><div class="v" id="exp-dur">—</div></div>
+          <div class="info-tile"><div class="lbl">Captions</div><div class="v" id="exp-caps">0</div></div>
+          <div class="info-tile"><div class="lbl">Crop</div><div class="v" id="exp-crop">Original</div></div>
+          <div class="info-tile"><div class="lbl">Size out</div><div class="v" id="exp-dims">—</div></div>
+        </div>
+
+        <div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;margin-top:10px">Format</div>
+        <div class="format-grid">
+          <button class="format-card on" data-fmt="webm">
+            <div class="fmt-name">WebM</div>
+            <div class="fmt-desc">Real-time recording. Universal browser support. Trim Silence forces frame-by-frame VP9.</div>
+          </button>
+          <button class="format-card" data-fmt="mp4">
+            <div class="fmt-name">MP4</div>
+            <div class="fmt-desc">Frame-by-frame H.264/VP9 encode. Wider device support.</div>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-block" id="btn-start-export" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Start Export
+      </button>
+
+      <div class="tip-box">
+        Keep the tab active and unlocked during export — background tabs may pause recording.
+      </div>
+
+      <div class="export-status" id="exp-status">
+        <div class="pbar"><div class="pbar-fill" id="exp-fill"></div></div>
+        <div class="stat" id="exp-stat">Preparing...</div>
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+          <button class="btn btn-secondary btn-sm" id="btn-cancel-exp">Cancel</button>
+          <a class="btn btn-primary btn-sm" id="btn-dl" style="display:none" download>Download</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom tab bar -->
+<nav class="tabbar">
+  <button data-tab="source" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Source
+  </button>
+  <button data-tab="captions" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Captions
+  </button>
+  <button data-tab="style" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.946.75-1.688 1.688-1.688H16.5c3.04 0 5.5-2.46 5.5-5.5C22 6.04 17.52 2 12 2z"/></svg>
+    Style
+  </button>
+  <button data-tab="export" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export
+  </button>
+</nav>
+
+<!-- Hidden inputs -->
+<input type="file" id="file-in" accept="video/*" style="display:none">
+<input type="file" id="srt-in" accept=".srt,.vtt,text/plain" style="display:none">
+
+<!-- Settings sheet -->
+<div class="modal-bg" id="settings-modal">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>Settings</h2>
+      <button class="close" data-close-sheet aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Groq API Key
+        <span style="background:rgba(74,222,128,.2);color:var(--success);font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;letter-spacing:.04em">FREE TIER</span>
+      </div>
+      <input type="password" id="groq-key-input" placeholder="gsk_..." spellcheck="false" autocomplete="off">
+      <div id="usage-display" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"></div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:10px">
+        <strong style="color:var(--text2)">How to get one (free, ~2 min):</strong><br>
+        1. Open <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--accent2)">console.groq.com/keys</a><br>
+        2. Sign up (no card needed) and click "Create API Key"<br>
+        3. Copy the <code style="background:var(--surf3);padding:1px 4px;border-radius:3px">gsk_...</code> key, paste it above, tap Save<br><br>
+        <strong style="color:var(--text2)">Free quota:</strong> 2,000 requests/day for Whisper. Most videos use 1–10 requests.<br>
+        <strong style="color:var(--text2)">Will I be charged?</strong> No. Free tier requires no card. Hitting the limit returns an error, not a charge.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" id="btn-clear-key">Clear</button>
+        <button class="btn btn-primary btn-sm" id="btn-save-key">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loader" id="loader">
+  <div class="spin"></div>
+  <h3 id="loader-title">Working...</h3>
+  <p id="loader-msg">&nbsp;</p>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-bar"></div></div>
+  <div class="loader-pct" id="loader-pct"></div>
+  <button class="btn btn-ghost btn-sm" id="loader-cancel" style="display:none">Cancel</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* ────────────────────────────────────────────────────────────
+   STATE
+   ──────────────────────────────────────────────────────────── */
+const S = {
+  file: null, url: null, duration: 0,
+  captions: [],
+  style: loadStyle(),
+  crop: 'original',
+  exportFmt: 'webm',
+  uid: 0,
+  raf: null,
+  transcribing: false, exporting: false,
+  abort: null,
+  activeRecorder: null,
+  videoOriginalSrc: null,
+  capAnimStarts: new Map(),
+  speechRegions: null,
+  trimEnabled: false,
+  vfxEnabled: false,
+  vfxMelody: 'uplifting',
+  vfxStrength: 85,
+  vfxNoteDur: 1, // 0=1/8, 1=1/4, 2=1/2, 3=whole
+  vfxMelodyVol: 0
+};
+
+function defaultStyle(){
+  return {
+    font: 'Anton', weight: '700', italic: false, upper: false,
+    size: 48,
+    lh: 1.25,
+    ls: 0,
+    color: '#ffffff',
+    gradient: false, color2: '#ffd700',
+    outline: '#000000', outlineW: 3,
+    shadow: false, shadowColor: '#000000', shadowBlur: 8, shadowY: 3,
+    bgOn: false, bg: '#000000', bgOp: 60, bgPad: 12, bgRadius: 8,
+    position: 'bc', pad: 28, voff: 0, maxW: 90,
+    anim: 'none', animDur: 280
+  };
+}
+function loadStyle(){
+  try{
+    const s = JSON.parse(localStorage.getItem('cc_style'));
+    if(s && typeof s === 'object') return Object.assign(defaultStyle(), s);
+  } catch(e){}
+  return defaultStyle();
+}
+function saveStyle(){
+  try{ localStorage.setItem('cc_style', JSON.stringify(S.style)); }catch(e){}
+}
+
+const PRESETS = [
+  { name:'CLEAN', s:{ font:'Inter', weight:'700', size:48, color:'#ffffff', outline:'#000000', outlineW:2, bgOn:false, shadow:false, gradient:false, italic:false, upper:false }},
+  { name:'BOLD',  s:{ font:'Anton', weight:'700', size:60, color:'#ffffff', outline:'#000000', outlineW:5, bgOn:false, shadow:false, gradient:false, italic:false, upper:true }},
+  { name:'GLOW',  s:{ font:'Montserrat', weight:'900', size:52, color:'#ffffff', outline:'#000000', outlineW:1, bgOn:false, shadow:true, shadowColor:'#7c5cfc', shadowBlur:24, shadowY:0, gradient:false, italic:false, upper:false }},
+  { name:'GOLD',  s:{ font:'Bebas Neue', weight:'700', size:56, color:'#ffd700', outline:'#3d2700', outlineW:4, bgOn:false, shadow:true, shadowColor:'#000', shadowBlur:6, shadowY:3, gradient:true, color2:'#ff9500', italic:false, upper:true }},
+  { name:'BOX',   s:{ font:'Roboto', weight:'700', size:42, color:'#ffffff', outline:'#000000', outlineW:0, bgOn:true, bg:'#000000', bgOp:80, bgPad:14, bgRadius:6, shadow:false, gradient:false, italic:false, upper:false }},
+  { name:'POP',   s:{ font:'Bowlby One', weight:'700', size:58, color:'#fff200', outline:'#000000', outlineW:6, bgOn:false, shadow:true, shadowColor:'#000', shadowBlur:0, shadowY:5, gradient:false, italic:false, upper:true }},
+  { name:'SOFT',  s:{ font:'Caveat', weight:'700', size:56, color:'#ffffff', outline:'#000000', outlineW:0, bgOn:true, bg:'#7c5cfc', bgOp:90, bgPad:16, bgRadius:24, shadow:true, shadowColor:'#000', shadowBlur:8, shadowY:2, gradient:false, italic:false, upper:false }},
+  { name:'NEON',  s:{ font:'Russo One', weight:'700', size:54, color:'#00ffff', outline:'#ff00ff', outlineW:2, bgOn:false, shadow:true, shadowColor:'#00ffff', shadowBlur:30, shadowY:0, gradient:false, italic:false, upper:true }},
+  { name:'RETRO', s:{ font:'Press Start 2P', weight:'400', size:30, color:'#ffffff', outline:'#000000', outlineW:3, bgOn:false, shadow:false, gradient:false, italic:false, upper:false }},
+  { name:'MOVIE', s:{ font:'Cinzel', weight:'900', size:46, color:'#f5f5f5', outline:'#000000', outlineW:2, bgOn:false, shadow:true, shadowColor:'#000', shadowBlur:12, shadowY:4, gradient:false, italic:true, upper:true }}
+];
+
+/* ────────────────────────────────────────────────────────────
+   HELPERS
+   ──────────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const uid = () => ++S.uid;
+const fmtTime = s => { if(!isFinite(s)||s<0)return '0:00'; const m=Math.floor(s/60),sc=Math.floor(s%60); return `${m}:${String(sc).padStart(2,'0')}`; };
+const fmtTimeMs = s => { if(!isFinite(s)||s<0)return '0:00.0'; const m=Math.floor(s/60),sc=(s%60).toFixed(1).padStart(4,'0'); return `${m}:${sc}`; };
+const fmtSrt = s => { if(!isFinite(s)||s<0)s=0; const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=(s%60).toFixed(3).padStart(6,'0'); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${sc.replace('.',',')}`; };
+const parseTime = v => { const m=String(v).trim().match(/^(\d+):(\d+(?:\.\d+)?)$/); return m?+m[1]*60+parseFloat(m[2]):(isNaN(+v)?NaN:+v); };
+const hexRGB = h => { if(!/^#[0-9a-f]{6}$/i.test(h))return [0,0,0]; return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; };
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const escHtml = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let toastT;
+function toast(msg, kind=''){
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ t.classList.remove('show'); }, 3200);
+}
+
+function showLoader(title, msg, pct=null, cancelable=false, onCancel=null){
+  $('loader-title').textContent = title;
+  $('loader-msg').innerHTML = msg||'&nbsp;';
+  if(pct !== null){ $('loader-bar').style.width = clamp(pct,0,100)+'%'; $('loader-pct').textContent = Math.round(pct)+'%'; }
+  else { $('loader-bar').style.width = '0%'; $('loader-pct').textContent = ''; }
+  const c = $('loader-cancel');
+  c.style.display = cancelable ? '' : 'none';
+  c.onclick = onCancel;
+  $('loader').classList.add('show');
+}
+function updateLoader(msg, pct){
+  if(msg !== null && msg !== undefined) $('loader-msg').innerHTML = msg;
+  if(pct !== null && pct !== undefined){ $('loader-bar').style.width = clamp(pct,0,100)+'%'; $('loader-pct').textContent = Math.round(pct)+'%'; }
+}
+function hideLoader(){ $('loader').classList.remove('show'); $('loader-cancel').onclick = null; }
+
+/* ────────────────────────────────────────────────────────────
+   TABS
+   ──────────────────────────────────────────────────────────── */
+function openTab(name){
+  $$('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $$('.tab-pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + name));
+  if(name === 'captions') $('btn-add-cap').classList.toggle('show', !!S.file);
+  else $('btn-add-cap').classList.remove('show');
+  if(name === 'export') refreshExportInfo();
+}
+$$('.tabbar button').forEach(b => b.addEventListener('click', ()=> {
+  if(b.disabled) return;
+  openTab(b.dataset.tab);
+}));
+
+function unlockTabs(){
+  $$('.tabbar button[data-tab="captions"], .tabbar button[data-tab="style"], .tabbar button[data-tab="export"]').forEach(b => b.disabled = false);
+}
+
+/* ────────────────────────────────────────────────────────────
+   VIDEO LOAD & PREVIEW
+   ──────────────────────────────────────────────────────────── */
+const vid = document.createElement('video');
+vid.playsInline = true; vid.preload = 'auto'; vid.crossOrigin = 'anonymous';
+const canvas = $('preview-canvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+async function loadVideoFile(file){
+  if(!file || !file.type.startsWith('video/')){
+    toast('Choose a video file (MP4/MOV/WebM)', 'err');
+    return;
+  }
+  showLoader('Loading video', 'Reading the file…', null);
+  S.file = file;
+  if(S.url) URL.revokeObjectURL(S.url);
+  S.url = URL.createObjectURL(file);
+  S.videoOriginalSrc = S.url;
+  vid.src = S.url;
+  try{
+    await new Promise((res, rej)=>{
+      const ok = ()=>{ cleanup(); res(); };
+      const er = ()=>{ cleanup(); rej(new Error('Decode failed')); };
+      const cleanup = ()=>{ vid.removeEventListener('loadedmetadata', ok); vid.removeEventListener('error', er); };
+      vid.addEventListener('loadedmetadata', ok);
+      vid.addEventListener('error', er);
+    });
+  } catch(e){
+    hideLoader();
+    toast('Could not decode this video — try MP4 or WebM', 'err');
+    return;
+  }
+  S.duration = vid.duration;
+  resizeCanvas();
+  $('stage').classList.remove('empty');
+  $('stage').classList.add('has-video');
+  $('stage-empty').style.display = 'none';
+  $('stage-ctrl').style.display = '';
+  $('crop-pill').style.display = '';
+  $('timeline').max = vid.duration;
+  $('timeline').value = 0;
+  updateTimeLabel();
+
+  // Force first frame paint
+  try{
+    vid.muted = true;
+    await vid.play().catch(()=>{});
+    vid.pause();
+    vid.currentTime = 0;
+    vid.muted = false;
+  } catch(e){}
+
+  $('video-info-r').textContent = `${vid.videoWidth}×${vid.videoHeight} · ${fmtTime(vid.duration)}`;
+  $('btn-pick-label').textContent = 'Replace Video';
+  $('trim-card').style.display = '';
+  $('vfx-card').style.display = '';
+  S.speechRegions = null; // reset on new video
+  $('trim-controls').style.display = 'none';
+  $('trim-status').textContent = 'Off';
+  unlockTabs();
+  if(!S.raf) startRenderLoop();
+  hideLoader();
+  toast('Video ready — pick a transcription method', 'ok');
+}
+
+function resizeCanvas(){
+  if(!vid.videoWidth) return;
+  if(S.crop === '9:16'){
+    canvas.height = vid.videoHeight;
+    canvas.width = Math.round(vid.videoHeight * 9/16);
+  } else if(S.crop === '1:1'){
+    const s = Math.min(vid.videoWidth, vid.videoHeight);
+    canvas.width = s; canvas.height = s;
+  } else {
+    canvas.width = vid.videoWidth;
+    canvas.height = vid.videoHeight;
+  }
+}
+
+function startRenderLoop(){
+  const loop = ()=>{
+    drawFrame(ctx, canvas.width, canvas.height, vid.currentTime);
+    S.raf = requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+function drawFrame(cx, w, h, t){
+  if(vid.readyState >= 2){
+    if(S.crop === '9:16'){
+      const sh = vid.videoHeight, sw = Math.round(sh*9/16);
+      const sx = Math.floor((vid.videoWidth-sw)/2);
+      cx.drawImage(vid, sx, 0, sw, sh, 0, 0, w, h);
+    } else if(S.crop === '1:1'){
+      const s = Math.min(vid.videoWidth, vid.videoHeight);
+      const sx = Math.floor((vid.videoWidth-s)/2);
+      const sy = Math.floor((vid.videoHeight-s)/2);
+      cx.drawImage(vid, sx, sy, s, s, 0, 0, w, h);
+    } else {
+      cx.drawImage(vid, 0, 0, w, h);
+    }
+  } else {
+    cx.fillStyle = '#000';
+    cx.fillRect(0, 0, w, h);
+  }
+  drawCaptions(cx, w, h, t);
+}
+
+/* ────────────────────────────────────────────────────────────
+   CAPTION RENDERING (with all styling features)
+   ──────────────────────────────────────────────────────────── */
+function drawCaptions(cx, w, h, t){
+  const cap = S.captions.find(c => t >= c.s && t <= c.e);
+  if(!cap || !cap.t.trim()) return;
+  const st = S.style;
+  const scale = h / 720;
+  const fontSize = Math.max(12, st.size * scale);
+  const pad = st.pad * scale;
+  const outlineW = st.outlineW * scale;
+  const lh = fontSize * st.lh;
+  const ls = st.ls * scale;
+
+  // Animation timing (capture first display moment per caption)
+  let progress = 1;
+  if(st.anim !== 'none'){
+    let firstSeen = S.capAnimStarts.get(cap.id);
+    if(firstSeen == null){
+      firstSeen = t;
+      S.capAnimStarts.set(cap.id, t);
+    }
+    progress = clamp((t - firstSeen) * 1000 / st.animDur, 0, 1);
+  }
+
+  let textToDraw = cap.t.trim();
+  if(st.upper) textToDraw = textToDraw.toUpperCase();
+
+  const fontStr = `${st.italic?'italic ':''}${st.weight} ${fontSize}px "${st.font}", sans-serif`;
+  cx.font = fontStr;
+  cx.textBaseline = 'top';
+
+  const maxW = w * (st.maxW / 100);
+
+  // Word-by-word for typewriter
+  let lines;
+  if(st.anim === 'typewriter'){
+    const allWords = textToDraw.split(/\s+/);
+    const visibleN = Math.max(1, Math.floor(progress * allWords.length));
+    const visible = allWords.slice(0, visibleN).join(' ');
+    lines = wrapText(cx, visible, maxW, ls);
+  } else {
+    lines = wrapText(cx, textToDraw, maxW, ls);
+  }
+
+  if(lines.length === 0 || lines[0] === '') return;
+
+  const totalH = lines.length * lh;
+  const row = st.position[0];
+  const col = st.position[1];
+  let x, align;
+  if(col === 'l'){ x = pad; align = 'left'; }
+  else if(col === 'r'){ x = w - pad; align = 'right'; }
+  else { x = w/2; align = 'center'; }
+  let y;
+  if(row === 't') y = pad;
+  else if(row === 'm') y = (h - totalH)/2;
+  else y = h - totalH - pad;
+  y += st.voff * scale;
+
+  cx.textAlign = align;
+
+  // Apply animation effects (transform/opacity)
+  cx.save();
+  if(st.anim === 'fade'){ cx.globalAlpha = progress; }
+  else if(st.anim === 'pop'){
+    const sc = 0.6 + 0.4 * progress;
+    cx.globalAlpha = progress;
+    cx.translate(x, y + totalH/2);
+    cx.scale(sc, sc);
+    cx.translate(-x, -(y + totalH/2));
+  } else if(st.anim === 'slide-up'){
+    cx.globalAlpha = progress;
+    cx.translate(0, (1-progress) * 30 * scale);
+  } else if(st.anim === 'slide-down'){
+    cx.globalAlpha = progress;
+    cx.translate(0, -(1-progress) * 30 * scale);
+  }
+
+  // Draw each line
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i];
+    const ly = y + i * lh;
+    drawLineWithLetterSpacing(cx, line, x, ly, align, ls, {
+      st, fontSize, lh, scale, outlineW
+    });
+  }
+  cx.restore();
+}
+
+function drawLineWithLetterSpacing(cx, line, x, ly, align, ls, ctxState){
+  const { st, fontSize, lh, scale, outlineW } = ctxState;
+
+  // Background
+  if(st.bgOn){
+    const w = measureSpaced(cx, line, ls);
+    const bp = Math.max(6*scale, st.bgPad * scale);
+    const bw = w + bp*2, bh = lh + bp*0.5;
+    let bx;
+    if(align === 'center') bx = x - bw/2;
+    else if(align === 'right') bx = x - bw;
+    else bx = x - bp;
+    const [r,g,b] = hexRGB(st.bg);
+    cx.fillStyle = `rgba(${r},${g},${b},${st.bgOp/100})`;
+    roundRect(cx, bx, ly - bp*0.25, bw, bh, st.bgRadius * scale);
+    cx.fill();
+  }
+
+  // Shadow (drawn before text fill so it sits behind)
+  if(st.shadow){
+    cx.save();
+    cx.shadowColor = st.shadowColor;
+    cx.shadowBlur = st.shadowBlur * scale;
+    cx.shadowOffsetX = 0;
+    cx.shadowOffsetY = st.shadowY * scale;
+    drawSpacedText(cx, line, x, ly, align, ls, st.color);
+    cx.restore();
+  }
+
+  // Outline
+  if(outlineW > 0){
+    cx.strokeStyle = st.outline;
+    cx.lineWidth = outlineW * 2;
+    cx.lineJoin = 'round';
+    cx.miterLimit = 2;
+    drawSpacedStroke(cx, line, x, ly, align, ls);
+  }
+
+  // Fill — solid or gradient
+  if(st.gradient){
+    const w = measureSpaced(cx, line, ls);
+    let gx0;
+    if(align === 'center') gx0 = x - w/2;
+    else if(align === 'right') gx0 = x - w;
+    else gx0 = x;
+    const grad = cx.createLinearGradient(gx0, ly, gx0, ly + fontSize);
+    grad.addColorStop(0, st.color);
+    grad.addColorStop(1, st.color2);
+    drawSpacedText(cx, line, x, ly, align, ls, grad);
+  } else {
+    drawSpacedText(cx, line, x, ly, align, ls, st.color);
+  }
+}
+
+// Letter spacing: draw chars individually only when ls != 0 (faster otherwise)
+function drawSpacedText(cx, text, x, y, align, ls, fillStyle){
+  cx.fillStyle = fillStyle;
+  if(ls === 0){ cx.fillText(text, x, y); return; }
+  const w = measureSpaced(cx, text, ls);
+  let cur;
+  if(align === 'center') cur = x - w/2;
+  else if(align === 'right') cur = x - w;
+  else cur = x;
+  cx.textAlign = 'left';
+  for(const ch of text){
+    cx.fillText(ch, cur, y);
+    cur += cx.measureText(ch).width + ls;
+  }
+  cx.textAlign = align;
+}
+function drawSpacedStroke(cx, text, x, y, align, ls){
+  if(ls === 0){ cx.strokeText(text, x, y); return; }
+  const w = measureSpaced(cx, text, ls);
+  let cur;
+  if(align === 'center') cur = x - w/2;
+  else if(align === 'right') cur = x - w;
+  else cur = x;
+  cx.textAlign = 'left';
+  for(const ch of text){
+    cx.strokeText(ch, cur, y);
+    cur += cx.measureText(ch).width + ls;
+  }
+  cx.textAlign = align;
+}
+function measureSpaced(cx, text, ls){
+  if(ls === 0) return cx.measureText(text).width;
+  let w = 0;
+  for(const ch of text) w += cx.measureText(ch).width + ls;
+  return w - ls;
+}
+
+function wrapText(cx, text, maxW, ls){
+  const words = text.split(/\s+/);
+  const lines = [];
+  let cur = '';
+  for(const w of words){
+    const tryLine = cur ? cur + ' ' + w : w;
+    if(measureSpaced(cx, tryLine, ls) > maxW && cur){
+      lines.push(cur);
+      cur = w;
+    } else cur = tryLine;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function roundRect(cx, x, y, w, h, r){
+  r = Math.min(r, w/2, h/2);
+  cx.beginPath();
+  cx.moveTo(x+r, y);
+  cx.arcTo(x+w, y, x+w, y+h, r);
+  cx.arcTo(x+w, y+h, x, y+h, r);
+  cx.arcTo(x, y+h, x, y, r);
+  cx.arcTo(x, y, x+w, y, r);
+  cx.closePath();
+}
+
+/* ────────────────────────────────────────────────────────────
+   PLAYBACK CONTROLS
+   ──────────────────────────────────────────────────────────── */
+$('play-btn').onclick = ()=> { vid.paused ? vid.play() : vid.pause(); };
+vid.addEventListener('play', ()=> { $('ico-play').style.display='none'; $('ico-pause').style.display=''; });
+vid.addEventListener('pause', ()=> { $('ico-play').style.display=''; $('ico-pause').style.display='none'; });
+vid.addEventListener('timeupdate', ()=> {
+  if(!isFinite(vid.currentTime)) return;
+  $('timeline').value = vid.currentTime;
+  updateTimeLabel();
+  highlightActiveCap();
+});
+$('timeline').oninput = e => { vid.currentTime = +e.target.value; };
+function updateTimeLabel(){ $('time-label').textContent = `${fmtTime(vid.currentTime)} / ${fmtTime(vid.duration||0)}`; }
+
+function highlightActiveCap(){
+  const t = vid.currentTime;
+  $$('.cap-item').forEach(el => {
+    const cap = S.captions.find(c => c.id === +el.dataset.id);
+    if(!cap) return;
+    el.classList.toggle('active', t >= cap.s && t <= cap.e);
+  });
+}
+
+/* Crop */
+$$('.crop-pill button').forEach(b => b.addEventListener('click', ()=> {
+  const c = b.dataset.crop;
+  $$('.crop-pill button').forEach(x => x.classList.toggle('on', x === b));
+  S.crop = c;
+  resizeCanvas();
+}));
+
+/* ────────────────────────────────────────────────────────────
+   FILE PICKERS
+   ──────────────────────────────────────────────────────────── */
+$('file-in').onchange = e => { const f = e.target.files[0]; if(f) loadVideoFile(f); e.target.value = ''; };
+$('btn-pick-video').onclick = ()=> $('file-in').click();
+$('srt-in').onchange = e => { const f = e.target.files[0]; if(f) importSrtFile(f); e.target.value = ''; };
+$('btn-import-srt').onclick = ()=> { if(!S.file){ toast('Load a video first', 'warn'); return; } $('srt-in').click(); };
+$('btn-export-srt').onclick = exportSrtFile;
+
+/* Drag-drop AND click-to-pick when empty */
+const stage = $('stage');
+stage.addEventListener('click', ()=> {
+  if(stage.classList.contains('empty')) $('file-in').click();
+});
+stage.addEventListener('dragover', e => e.preventDefault());
+stage.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if(f) loadVideoFile(f);
+});
+
+/* ────────────────────────────────────────────────────────────
+   CAPTIONS LIST
+   ──────────────────────────────────────────────────────────── */
+function renderCaps(){
+  const list = $('cap-list');
+  list.innerHTML = '';
+  $('cap-count').textContent = S.captions.length;
+  if(!S.captions.length){
+    const e = document.createElement('div');
+    e.className = 'caps-empty';
+    e.id = 'caps-empty';
+    e.innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No captions yet. Use one of the methods<br>in the <strong style="color:var(--text)">Source</strong> tab to get started.</p>';
+    list.appendChild(e);
+    $('btn-start-export').disabled = true;
+    refreshExportInfo();
+    return;
+  }
+  S.captions.sort((a,b) => a.s - b.s);
+  S.captions.forEach(c => list.appendChild(makeCapEl(c)));
+  $('btn-start-export').disabled = !S.file;
+  refreshExportInfo();
+}
+
+function makeCapEl(cap){
+  const d = document.createElement('div');
+  d.className = 'cap-item';
+  d.dataset.id = cap.id;
+  d.innerHTML = `
+    <div class="cap-times">
+      <input class="cap-time-in" value="${fmtTimeMs(cap.s)}" data-f="s" inputmode="decimal" spellcheck="false">
+      <span class="cap-arrow">→</span>
+      <input class="cap-time-in" value="${fmtTimeMs(cap.e)}" data-f="e" inputmode="decimal" spellcheck="false">
+      <span class="cap-spacer"></span>
+      <div class="cap-actions">
+        <button class="seek" title="Seek to caption" aria-label="Seek to"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+        <button class="delete" title="Delete" aria-label="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      </div>
+    </div>
+    <textarea class="cap-text" rows="1" placeholder="Caption text...">${escHtml(cap.t)}</textarea>
+  `;
+  d.querySelectorAll('.cap-time-in').forEach(inp => {
+    inp.addEventListener('focus', ()=> inp.select());
+    inp.addEventListener('change', ()=> {
+      const v = parseTime(inp.value);
+      if(!isNaN(v) && v >= 0){ cap[inp.dataset.f] = v; inp.value = fmtTimeMs(v); }
+      else inp.value = fmtTimeMs(cap[inp.dataset.f]);
+    });
+  });
+  d.querySelector('.seek').onclick = ()=> { vid.currentTime = cap.s; };
+  d.querySelector('.delete').onclick = ()=> {
+    S.captions = S.captions.filter(c => c.id !== cap.id);
+    renderCaps();
+  };
+  const ta = d.querySelector('.cap-text');
+  const autoSize = ()=> { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+  ta.addEventListener('input', ()=> { cap.t = ta.value; autoSize(); });
+  requestAnimationFrame(autoSize);
+  return d;
+}
+
+$('btn-add-cap').onclick = ()=> {
+  const s = vid.currentTime;
+  const e = Math.min(s + 3, vid.duration || s + 3);
+  const newCap = { id: uid(), s, e, t: '' };
+  S.captions.push(newCap);
+  renderCaps();
+  setTimeout(()=> {
+    const items = $$('.cap-item');
+    const last = items[items.length-1];
+    if(last){
+      last.scrollIntoView({ behavior:'smooth', block:'center' });
+      last.querySelector('.cap-text').focus();
+    }
+  }, 50);
+};
+
+/* ────────────────────────────────────────────────────────────
+   STYLE BINDINGS (huge)
+   ──────────────────────────────────────────────────────────── */
+function bindStyle(){
+  const updaters = {
+    'font': v => { S.style.font = v; },
+    'size': v => { S.style.size = +v; $('v-size').textContent = v; },
+    'lh': v => { S.style.lh = +v; $('v-lh').textContent = v; },
+    'ls': v => { S.style.ls = +v; $('v-ls').textContent = v; },
+    'color': v => { S.style.color = v; $('s-color-t').value = v; },
+    'color-t': v => { if(/^#[0-9a-f]{6}$/i.test(v)){ S.style.color = v; $('s-color').value = v; } },
+    'color2': v => { S.style.color2 = v; $('s-color2-t').value = v; },
+    'color2-t': v => { if(/^#[0-9a-f]{6}$/i.test(v)){ S.style.color2 = v; $('s-color2').value = v; } },
+    'outline': v => { S.style.outline = v; $('s-outline-t').value = v; },
+    'outline-t': v => { if(/^#[0-9a-f]{6}$/i.test(v)){ S.style.outline = v; $('s-outline').value = v; } },
+    'outw': v => { S.style.outlineW = +v; $('v-outw').textContent = v; },
+    'shadow-color': v => { S.style.shadowColor = v; $('s-shadow-color-t').value = v; },
+    'shadow-color-t': v => { if(/^#[0-9a-f]{6}$/i.test(v)){ S.style.shadowColor = v; $('s-shadow-color').value = v; } },
+    'shadow-blur': v => { S.style.shadowBlur = +v; $('v-sb').textContent = v; },
+    'shadow-y': v => { S.style.shadowY = +v; $('v-so').textContent = v; },
+    'bg': v => { S.style.bg = v; $('s-bg-t').value = v; },
+    'bg-t': v => { if(/^#[0-9a-f]{6}$/i.test(v)){ S.style.bg = v; $('s-bg').value = v; } },
+    'bgo': v => { S.style.bgOp = +v; $('v-bgo').textContent = v; },
+    'bgp': v => { S.style.bgPad = +v; $('v-bgp').textContent = v; },
+    'bgr': v => { S.style.bgRadius = +v; $('v-bgr').textContent = v; },
+    'pad': v => { S.style.pad = +v; $('v-pad').textContent = v; },
+    'voff': v => { S.style.voff = +v; $('v-voff').textContent = v; },
+    'mw': v => { S.style.maxW = +v; $('v-mw').textContent = v; },
+    'anim': v => { S.style.anim = v; },
+    'anim-dur': v => { S.style.animDur = +v; $('v-anim').textContent = v; }
+  };
+
+  Object.entries(updaters).forEach(([key, fn]) => {
+    const el = $('s-' + key);
+    if(!el) return;
+    el.addEventListener('input', e => { fn(e.target.value); saveStyle(); });
+  });
+
+  // Toggles
+  $('t-bold').onclick = ()=> { S.style.weight = S.style.weight === '700' ? '400' : '700'; $('t-bold').classList.toggle('on', S.style.weight === '700'); saveStyle(); };
+  $('t-italic').onclick = ()=> { S.style.italic = !S.style.italic; $('t-italic').classList.toggle('on', S.style.italic); saveStyle(); };
+  $('t-upper').onclick = ()=> { S.style.upper = !S.style.upper; $('t-upper').classList.toggle('on', S.style.upper); saveStyle(); };
+
+  $('t-gradient').onclick = ()=> {
+    S.style.gradient = !S.style.gradient;
+    $('t-gradient').classList.toggle('on', S.style.gradient);
+    $('grad-controls').style.display = S.style.gradient ? '' : 'none';
+    saveStyle();
+  };
+  $('t-shadow').onclick = ()=> {
+    S.style.shadow = !S.style.shadow;
+    $('t-shadow').classList.toggle('on', S.style.shadow);
+    $('shadow-controls').style.display = S.style.shadow ? '' : 'none';
+    saveStyle();
+  };
+  $('t-bg').onclick = ()=> {
+    S.style.bgOn = !S.style.bgOn;
+    $('t-bg').classList.toggle('on', S.style.bgOn);
+    $('bg-controls').style.display = S.style.bgOn ? '' : 'none';
+    saveStyle();
+  };
+
+  // Position grid
+  $$('.pos-btn').forEach(b => b.addEventListener('click', ()=> {
+    S.style.position = b.dataset.pos;
+    $$('.pos-btn').forEach(x => x.classList.toggle('on', x === b));
+    saveStyle();
+  }));
+}
+
+function applyStyleToUI(){
+  const s = S.style;
+  $('s-font').value = s.font;
+  $('s-size').value = s.size; $('v-size').textContent = s.size;
+  $('s-lh').value = s.lh; $('v-lh').textContent = s.lh;
+  $('s-ls').value = s.ls; $('v-ls').textContent = s.ls;
+  $('s-color').value = s.color; $('s-color-t').value = s.color;
+  $('s-color2').value = s.color2; $('s-color2-t').value = s.color2;
+  $('s-outline').value = s.outline; $('s-outline-t').value = s.outline;
+  $('s-outw').value = s.outlineW; $('v-outw').textContent = s.outlineW;
+  $('s-shadow-color').value = s.shadowColor; $('s-shadow-color-t').value = s.shadowColor;
+  $('s-shadow-blur').value = s.shadowBlur; $('v-sb').textContent = s.shadowBlur;
+  $('s-shadow-y').value = s.shadowY; $('v-so').textContent = s.shadowY;
+  $('s-bg').value = s.bg; $('s-bg-t').value = s.bg;
+  $('s-bgo').value = s.bgOp; $('v-bgo').textContent = s.bgOp;
+  $('s-bgp').value = s.bgPad; $('v-bgp').textContent = s.bgPad;
+  $('s-bgr').value = s.bgRadius; $('v-bgr').textContent = s.bgRadius;
+  $('s-pad').value = s.pad; $('v-pad').textContent = s.pad;
+  $('s-voff').value = s.voff; $('v-voff').textContent = s.voff;
+  $('s-mw').value = s.maxW; $('v-mw').textContent = s.maxW;
+  $('s-anim').value = s.anim;
+  $('s-anim-dur').value = s.animDur; $('v-anim').textContent = s.animDur;
+  $('t-bold').classList.toggle('on', s.weight === '700');
+  $('t-italic').classList.toggle('on', s.italic);
+  $('t-upper').classList.toggle('on', s.upper);
+  $('t-gradient').classList.toggle('on', s.gradient);
+  $('grad-controls').style.display = s.gradient ? '' : 'none';
+  $('t-shadow').classList.toggle('on', s.shadow);
+  $('shadow-controls').style.display = s.shadow ? '' : 'none';
+  $('t-bg').classList.toggle('on', s.bgOn);
+  $('bg-controls').style.display = s.bgOn ? '' : 'none';
+  $$('.pos-btn').forEach(b => b.classList.toggle('on', b.dataset.pos === s.position));
+}
+
+/* Presets */
+function renderPresets(){
+  const row = $('preset-row');
+  row.innerHTML = '';
+  PRESETS.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset';
+    const text = (p.s.upper ? 'AB' : 'Ab');
+    btn.innerHTML = `<span class="preset-text" style="color:${p.s.color};font-family:'${p.s.font}',sans-serif;font-weight:${p.s.weight||700};${p.s.italic?'font-style:italic;':''}-webkit-text-stroke:${p.s.outlineW>0?Math.min(p.s.outlineW/3,2):0}px ${p.s.outline||'#000'};">${text}</span><span class="preset-label">${p.name}</span>`;
+    btn.onclick = ()=> {
+      Object.assign(S.style, p.s);
+      applyStyleToUI();
+      saveStyle();
+      $$('.preset').forEach(x => x.classList.toggle('on', x === btn));
+    };
+    row.appendChild(btn);
+  });
+}
+
+/* ────────────────────────────────────────────────────────────
+   SETTINGS (Groq key)
+   ──────────────────────────────────────────────────────────── */
+$('btn-settings').onclick = ()=> {
+  const k = localStorage.getItem('groq_key') || '';
+  $('groq-key-input').value = k;
+  refreshUsageDisplay();
+  $('settings-modal').classList.add('show');
+};
+$$('[data-close-sheet]').forEach(b => b.addEventListener('click', ()=> {
+  b.closest('.modal-bg').classList.remove('show');
+}));
+$('settings-modal').addEventListener('click', e => {
+  if(e.target === $('settings-modal')) $('settings-modal').classList.remove('show');
+});
+$('btn-save-key').onclick = ()=> {
+  const k = $('groq-key-input').value.trim();
+  if(!k){ toast('Enter a key first', 'warn'); return; }
+  if(!k.startsWith('gsk_') && !confirm('That doesn\'t look like a Groq key. Save anyway?')) return;
+  localStorage.setItem('groq_key', k);
+  $('settings-modal').classList.remove('show');
+  toast('API key saved', 'ok');
+};
+$('btn-clear-key').onclick = ()=> {
+  if(!confirm('Remove saved API key?')) return;
+  localStorage.removeItem('groq_key');
+  $('groq-key-input').value = '';
+  toast('Key removed', 'ok');
+};
+
+/* ────────────────────────────────────────────────────────────
+   TRANSCRIPTION DISPATCH
+   ──────────────────────────────────────────────────────────── */
+$$('.source-btn[data-method]').forEach(b => b.addEventListener('click', ()=> {
+  const m = b.dataset.method;
+  if(!S.file){ toast('Load a video first', 'warn'); return; }
+  if(S.transcribing){ toast('Already in progress', 'warn'); return; }
+  if(m === 'groq') transcribeGroq();
+}));
+
+/* ────────────────────────────────────────────────────────────
+   GROQ CLOUD
+   ──────────────────────────────────────────────────────────── */
+async function transcribeGroq(){
+  const apiKey = localStorage.getItem('groq_key');
+  if(!apiKey){
+    toast('Add a Groq API key in ⚙ Settings first', 'warn');
+    $('btn-settings').click();
+    return;
+  }
+  // Estimate request count: 1 if file ≤24MB, else (durationSec * sampleSize / 24MB) chunks
+  const estDuration = vid.duration || 60;
+  const estChunks = Math.max(1, Math.ceil(estDuration / 786)); // 786s = ~24MB at 16kHz mono 16-bit
+  if(!checkUsageBeforeRequest(estChunks)) return;
+
+  S.transcribing = true;
+  let aborted = false;
+  showLoader('Cloud transcription', 'Preparing audio…', 0, true, ()=> { aborted = true; hideLoader(); S.transcribing = false; });
+
+  try{
+    updateLoader('Decoding audio…', 10);
+    const ab = await S.file.arrayBuffer();
+    if(aborted) return;
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuf;
+    try{ audioBuf = await actx.decodeAudioData(ab.slice(0)); }
+    catch(e){ try{ actx.close(); }catch(x){} throw new Error('Cannot decode audio'); }
+    if(aborted) return;
+    updateLoader('Resampling to 16kHz…', 25);
+
+    const mono = await extractMono16k(audioBuf, p => {
+      if(aborted) return;
+      updateLoader(null, 25 + p * 0.3);
+    }, ()=> aborted);
+    try{ actx.close(); }catch(e){}
+    if(aborted) return;
+
+    const wavBlob = float32ToWav(mono, 16000);
+    const fileSizeMB = wavBlob.size / 1048576;
+
+    const MAX_CHUNK_MB = 24;
+    const MAX_CHUNK_SAMPLES = Math.floor((MAX_CHUNK_MB * 1024 * 1024 - 44) / 2);
+
+    if(fileSizeMB <= MAX_CHUNK_MB){
+      updateLoader(`Uploading ${fileSizeMB.toFixed(1)}MB to Groq…`, 65);
+      const result = await groqTranscribe(wavBlob, apiKey, ()=> aborted);
+      if(aborted) return;
+      S.captions = [];
+      processGroqResult(result, 0);
+    } else {
+      const overlap = 2 * 16000;
+      const step = MAX_CHUNK_SAMPLES - overlap;
+      const numChunks = Math.ceil(mono.length / step);
+      updateLoader(`Splitting into ${numChunks} chunks…`, 60);
+      S.captions = [];
+      const t0 = Date.now();
+      for(let i = 0; i < numChunks; i++){
+        if(aborted) return;
+        const sStart = i * step;
+        const sEnd = Math.min(sStart + MAX_CHUNK_SAMPLES, mono.length);
+        const slice = mono.subarray(sStart, sEnd);
+        const offsetSec = sStart / 16000;
+        const chunkBlob = float32ToWav(slice, 16000);
+        const elapsed = (Date.now() - t0) / 1000;
+        const eta = i > 0 ? Math.ceil((elapsed/i) * (numChunks-i)) : 0;
+        updateLoader(`Chunk ${i+1}/${numChunks}${eta?` · ~${eta}s left`:''}`, 60 + (i/numChunks)*35);
+        const result = await groqTranscribe(chunkBlob, apiKey, ()=> aborted);
+        if(aborted) return;
+        processGroqResult(result, offsetSec, i > 0 ? 1.5 : 0);
+        renderCaps();
+      }
+    }
+    updateLoader('Done', 100);
+    await new Promise(r => setTimeout(r, 200));
+    renderCaps();
+    hideLoader();
+    toast(`${S.captions.length} captions ready`, 'ok');
+    openTab('captions');
+  } catch(e){
+    hideLoader();
+    if(!aborted){
+      toast('Groq: ' + e.message, 'err');
+      console.error(e);
+    }
+  } finally {
+    S.transcribing = false;
+  }
+}
+
+async function groqTranscribe(blob, apiKey, isAborted){
+  const fd = new FormData();
+  fd.append('file', blob, 'audio.wav');
+  fd.append('model', 'whisper-large-v3-turbo');
+  fd.append('response_format', 'verbose_json');
+  fd.append('language', 'en');
+  fd.append('temperature', '0');
+  return groqRequest(fd, apiKey, isAborted);
+}
+
+function processGroqResult(result, offsetSec, skipFirstSec=0){
+  if(!result || !Array.isArray(result.segments)){
+    if(result?.text) S.captions.push({ id: uid(), s: offsetSec, e: Math.min(offsetSec+5, vid.duration), t: result.text.trim() });
+    return;
+  }
+  for(const seg of result.segments){
+    const t = (seg.text || '').trim();
+    if(!t) continue;
+    const s = (seg.start ?? 0) + offsetSec;
+    const e = (seg.end ?? seg.start ?? 0) + offsetSec;
+    if(skipFirstSec > 0 && (seg.start ?? 0) < skipFirstSec) continue;
+    if(e <= s) continue;
+    const subs = splitIntoSegments(t, s, Math.min(e, vid.duration));
+    for(const sub of subs) S.captions.push({ id: uid(), ...sub });
+  }
+}
+
+/* Split long lines into 3-6 word segments at natural boundaries */
+function splitIntoSegments(text, st, en, target=5){
+  const words = text.trim().split(/\s+/);
+  if(words.length <= target+1) return [{ s: st, e: en, t: text.trim() }];
+  const segs = [];
+  const dur = en - st;
+  const total = words.length;
+  let cur = []; let curStart = 0;
+  for(let i = 0; i < words.length; i++){
+    cur.push(words[i]);
+    const endsSentence = /[.!?]$/.test(words[i]);
+    const endsClause = /[,;:]$/.test(words[i]);
+    const reached = cur.length >= target;
+    const over = cur.length >= target + 2;
+    const last = i === words.length - 1;
+    if(last || over || (reached && endsSentence) || (reached && endsClause)){
+      const sFrac = curStart / total;
+      const eFrac = (i+1) / total;
+      segs.push({
+        s: st + sFrac * dur,
+        e: st + eFrac * dur,
+        t: cur.join(' ')
+      });
+      cur = []; curStart = i + 1;
+    }
+  }
+  if(cur.length){
+    const sFrac = curStart / total;
+    segs.push({ s: st + sFrac * dur, e: en, t: cur.join(' ') });
+  }
+  return segs;
+}
+
+/* Convert AudioBuffer → mono Float32Array @ 16kHz */
+async function extractMono16k(audioBuf, onProgress, isAborted){
+  const srcSr = audioBuf.sampleRate;
+  const srcLen = audioBuf.length;
+  let mono;
+  if(audioBuf.numberOfChannels === 1){
+    mono = audioBuf.getChannelData(0);
+  } else {
+    mono = new Float32Array(srcLen);
+    const ch0 = audioBuf.getChannelData(0);
+    const ch1 = audioBuf.getChannelData(1);
+    const chunk = 1048576;
+    for(let i = 0; i < srcLen; i += chunk){
+      if(isAborted()) throw new Error('cancelled');
+      const end = Math.min(i + chunk, srcLen);
+      for(let j = i; j < end; j++) mono[j] = (ch0[j] + ch1[j]) * 0.5;
+      onProgress((i / srcLen) * 50);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  if(Math.abs(srcSr - 16000) < 1){
+    onProgress(100);
+    return mono;
+  }
+  const ratio = srcSr / 16000;
+  const outLen = Math.floor(mono.length / ratio);
+  const out = new Float32Array(outLen);
+  for(let i = 0; i < outLen; i++){
+    const sI = i * ratio;
+    const i0 = Math.floor(sI);
+    const i1 = Math.min(i0+1, mono.length-1);
+    const frac = sI - i0;
+    out[i] = mono[i0] * (1-frac) + mono[i1] * frac;
+    if(i % 200000 === 0 && i > 0){
+      if(isAborted()) throw new Error('cancelled');
+      onProgress(50 + (i/outLen)*50);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  onProgress(100);
+  return out;
+}
+
+function float32ToWav(samples, sr){
+  const len = samples.length * 2 + 44;
+  const buf = new ArrayBuffer(len);
+  const dv = new DataView(buf);
+  const ws = (o, s) => { for(let i = 0; i < s.length; i++) dv.setUint8(o+i, s.charCodeAt(i)); };
+  ws(0, 'RIFF'); dv.setUint32(4, len-8, true);
+  ws(8, 'WAVE'); ws(12, 'fmt '); dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr*2, true);
+  dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+  ws(36, 'data'); dv.setUint32(40, len-44, true);
+  let o = 44;
+  for(let i = 0; i < samples.length; i++){
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    dv.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    o += 2;
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+/* ────────────────────────────────────────────────────────────
+   SRT IMPORT/EXPORT
+   ──────────────────────────────────────────────────────────── */
+async function importSrtFile(file){
+  try{
+    const text = await file.text();
+    const caps = parseSrt(text);
+    if(!caps.length){ toast('No captions found', 'err'); return; }
+    S.captions = caps.map(c => ({ id: uid(), ...c }));
+    renderCaps();
+    toast(`Imported ${caps.length} captions`, 'ok');
+    openTab('captions');
+  } catch(e){ toast('Import failed: ' + e.message, 'err'); }
+}
+function parseSrt(text){
+  text = text.replace(/^\uFEFF/, '').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
+  if(text.toUpperCase().startsWith('WEBVTT')){
+    text = text.replace(/^WEBVTT[^\n]*\n+/i,'');
+    text = text.replace(/^NOTE[^\n]*(?:\n[^\n]+)*\n\n/gm,'');
+  }
+  const blocks = text.split(/\n\n+/);
+  const caps = [];
+  for(const block of blocks){
+    const lines = block.split('\n').filter(l => l.trim());
+    if(!lines.length) continue;
+    const ti = lines.findIndex(l => /-->/.test(l));
+    if(ti < 0) continue;
+    const m = lines[ti].match(/(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}|\d{1,2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}|\d{1,2}:\d{2}[,.]\d{1,3})/);
+    if(!m) continue;
+    const s = srtTime(m[1]), e = srtTime(m[2]);
+    const t = lines.slice(ti+1).join(' ').replace(/<[^>]+>/g,'').trim();
+    if(t) caps.push({ s, e, t });
+  }
+  return caps;
+}
+function srtTime(v){
+  v = v.replace(',', '.');
+  const p = v.split(':');
+  if(p.length === 3) return +p[0]*3600 + +p[1]*60 + +p[2];
+  if(p.length === 2) return +p[0]*60 + +p[1];
+  return 0;
+}
+function exportSrtFile(){
+  if(!S.captions.length){ toast('No captions to export', 'warn'); return; }
+  const content = S.captions.map((c, i) => `${i+1}\n${fmtSrt(c.s)} --> ${fmtSrt(c.e)}\n${c.t}\n`).join('\n');
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'captions.srt'; a.click();
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+  toast('SRT downloaded', 'ok');
+}
+
+/* ────────────────────────────────────────────────────────────
+   EXPORT
+   ──────────────────────────────────────────────────────────── */
+function refreshExportInfo(){
+  const trimmed = S.trimEnabled && S.speechRegions;
+  const dur = trimmed ? getTrimmedDuration() : vid.duration;
+  $('exp-dur').textContent = dur ? (trimmed ? fmtTime(dur) + ' (trimmed)' : fmtTime(dur)) : '—';
+  $('exp-caps').textContent = S.captions.length;
+  $('exp-crop').textContent = S.crop === 'original' ? 'Original' : S.crop;
+  let outW, outH;
+  if(S.crop === '9:16'){ outH = vid.videoHeight; outW = Math.round(outH*9/16); }
+  else if(S.crop === '1:1'){ const s = Math.min(vid.videoWidth, vid.videoHeight); outW = outH = s; }
+  else { outW = vid.videoWidth; outH = vid.videoHeight; }
+  $('exp-dims').textContent = (outW && outH) ? `${outW}×${outH}` : '—';
+  $('btn-start-export').disabled = !S.file || !S.captions.length;
+}
+
+$$('.format-card').forEach(c => c.addEventListener('click', ()=> {
+  S.exportFmt = c.dataset.fmt;
+  $$('.format-card').forEach(x => x.classList.toggle('on', x === c));
+}));
+
+$('btn-start-export').onclick = doExport;
+
+async function doExport(){
+  if(S.exporting) return;
+  if(!S.file || !S.captions.length){ toast('Need video + captions', 'warn'); return; }
+
+  const trimActive = S.trimEnabled && S.speechRegions && S.speechRegions.length > 0;
+
+  S.exporting = true;
+  $('btn-start-export').disabled = true;
+  $('exp-status').classList.add('show');
+  $('exp-stat').textContent = 'Preparing…';
+  $('exp-fill').style.width = '0%';
+  $('btn-dl').style.display = 'none';
+  $('btn-cancel-exp').textContent = 'Cancel';
+
+  // Trimmed exports always use frame-by-frame encoding (regardless of webm/mp4)
+  // Trimmed exports OR Voice FX always use frame-by-frame encoding
+  if(trimActive || S.vfxEnabled || S.exportFmt === 'mp4'){
+    try{
+      const targetFmt = S.exportFmt; // 'webm' or 'mp4'
+      const blob = await exportFrameByFrame(targetFmt, p => $('exp-fill').style.width = p+'%', m => $('exp-stat').textContent = m);
+      finishExport(blob, targetFmt);
+    } catch(e){
+      S.exporting = false;
+      $('btn-start-export').disabled = false;
+      if(e.message && e.message.includes('cancel')) $('exp-stat').textContent = 'Cancelled';
+      else { $('exp-stat').textContent = 'Failed: ' + e.message; toast('Export failed: ' + e.message, 'err'); }
+    }
+    return;
+  }
+
+  // Non-trimmed WebM via MediaRecorder (real-time, fastest)
+  try{
+    const ec = document.createElement('canvas');
+    if(S.crop === '9:16'){ ec.height = vid.videoHeight; ec.width = Math.round(vid.videoHeight*9/16); }
+    else if(S.crop === '1:1'){ const s = Math.min(vid.videoWidth, vid.videoHeight); ec.width = s; ec.height = s; }
+    else { ec.width = vid.videoWidth; ec.height = vid.videoHeight; }
+    const ecx = ec.getContext('2d', { alpha: false });
+    let raf;
+    const draw = ()=> { drawFrame(ecx, ec.width, ec.height, vid.currentTime); raf = requestAnimationFrame(draw); };
+
+    const cs = ec.captureStream(30);
+    let aTracks = [];
+    try{ const vs = vid.captureStream ? vid.captureStream() : vid.mozCaptureStream(); aTracks = vs.getAudioTracks(); }
+    catch(e){}
+    const stream = new MediaStream([...cs.getVideoTracks(), ...aTracks]);
+    const mimes = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    const mime = mimes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 5_000_000 });
+    S.activeRecorder = rec;
+    const chunks = [];
+    rec.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+    rec.onstop = ()=> { cancelAnimationFrame(raf); finishExport(new Blob(chunks, { type: mime }), 'webm'); };
+
+    vid.currentTime = 0; vid.muted = false;
+    await new Promise(r => setTimeout(r, 250));
+    draw();
+    rec.start(1000);
+    vid.play();
+
+    const iv = setInterval(()=> {
+      if(!vid.duration) return;
+      const pct = Math.min(99, (vid.currentTime/vid.duration)*100);
+      $('exp-fill').style.width = pct+'%';
+      $('exp-stat').textContent = `Recording · ${fmtTime(vid.currentTime)} / ${fmtTime(vid.duration)}`;
+    }, 200);
+    const onEnd = ()=> { clearInterval(iv); if(rec.state !== 'inactive') rec.stop(); vid.removeEventListener('ended', onEnd); };
+    vid.addEventListener('ended', onEnd);
+
+    $('btn-cancel-exp').onclick = ()=> {
+      clearInterval(iv);
+      try{ rec.stop(); }catch(e){}
+      cancelAnimationFrame(raf);
+      vid.pause();
+      S.exporting = false;
+      $('btn-start-export').disabled = false;
+      $('exp-stat').textContent = 'Cancelled';
+    };
+  } catch(e){
+    S.exporting = false;
+    $('btn-start-export').disabled = false;
+    $('exp-stat').textContent = 'Failed: ' + e.message;
+    toast('Export failed', 'err');
+  }
+}
+
+function finishExport(blob, fmt){
+  S.exporting = false;
+  $('btn-start-export').disabled = false;
+  const url = URL.createObjectURL(blob);
+  $('exp-fill').style.width = '100%';
+  $('exp-stat').textContent = `Done · ${(blob.size/1048576).toFixed(1)}MB · ${fmt.toUpperCase()}`;
+  const dl = $('btn-dl');
+  dl.href = url;
+  dl.download = `captioned-${Date.now()}.${fmt}`;
+  dl.style.display = '';
+  $('btn-cancel-exp').textContent = 'Done';
+  $('btn-cancel-exp').onclick = ()=> {
+    $('exp-status').classList.remove('show');
+    $('btn-cancel-exp').textContent = 'Cancel';
+  };
+}
+
+/* MP4 via WebCodecs + mp4-muxer */
+let _mp4MuxerReady = false;
+async function loadMuxer(){
+  if(_mp4MuxerReady) return;
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.min.js';
+    s.onload = res; s.onerror = ()=> rej(new Error('Failed to load MP4 muxer'));
+    document.head.appendChild(s);
+  });
+  _mp4MuxerReady = true;
+}
+
+/* WebM via WebCodecs + webm-muxer */
+let _webmMuxerReady = false;
+async function loadWebmMuxer(){
+  if(_webmMuxerReady) return;
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/webm-muxer@5.0.3/build/webm-muxer.min.js';
+    s.onload = res; s.onerror = ()=> rej(new Error('Failed to load WebM muxer'));
+    document.head.appendChild(s);
+  });
+  _webmMuxerReady = true;
+}
+
+async function exportFrameByFrame(format, onProgress, onStatus){
+  const isMp4 = format === 'mp4';
+  onStatus(isMp4 ? 'Loading MP4 encoder…' : 'Loading WebM encoder…');
+  if(isMp4) await loadMuxer();
+  else await loadWebmMuxer();
+  if(typeof VideoEncoder === 'undefined') throw new Error('WebCodecs not supported — try Chrome, Edge, or Safari 16.4+');
+
+  let Muxer, ABT;
+  if(isMp4){
+    Muxer = window.Mp4Muxer.Muxer;
+    ABT = window.Mp4Muxer.ArrayBufferTarget;
+  } else {
+    Muxer = window.WebMMuxer.Muxer;
+    ABT = window.WebMMuxer.ArrayBufferTarget;
+  }
+
+  // Determine source frame ranges to encode
+  // If trim active: only frames inside speech regions; remap to a continuous timeline
+  const trim = S.trimEnabled && S.speechRegions && S.speechRegions.length > 0;
+  const regions = trim ? S.speechRegions : [{ start: 0, end: vid.duration }];
+
+  // Stash original captions, swap in re-timed versions for drawing
+  const origCaps = S.captions;
+  if(trim) S.captions = getTrimmedCaptions();
+
+  let outW, outH;
+  if(S.crop === '9:16'){ outH = vid.videoHeight; outW = Math.round(outH*9/16); }
+  else if(S.crop === '1:1'){ const s = Math.min(vid.videoWidth, vid.videoHeight); outW = outH = s; }
+  else { outW = vid.videoWidth; outH = vid.videoHeight; }
+  outW = Math.floor(outW/2)*2; outH = Math.floor(outH/2)*2;
+
+  // Codec candidates differ by container
+  const codecCandidates = isMp4 ? [
+    { codec: 'avc1.42E01E', muxCodec: 'avc', name: 'H.264' },
+    { codec: 'avc1.42001E', muxCodec: 'avc', name: 'H.264 (baseline)' },
+    { codec: 'vp09.00.10.08', muxCodec: 'vp9', name: 'VP9' }
+  ] : [
+    { codec: 'vp09.00.10.08', muxCodec: 'V_VP9', name: 'VP9' },
+    { codec: 'vp8', muxCodec: 'V_VP8', name: 'VP8' }
+  ];
+  let chosen = null;
+  for(const c of codecCandidates){
+    try{
+      const sup = await VideoEncoder.isConfigSupported({ codec: c.codec, width: outW, height: outH, bitrate: 5_000_000, framerate: 30 });
+      if(sup.supported){ chosen = c; break; }
+    } catch(e){}
+  }
+  if(!chosen){
+    S.captions = origCaps;
+    throw new Error(`No supported ${isMp4 ? 'MP4' : 'WebM'} encoder on this device. Try the other format.`);
+  }
+  onStatus(`Using ${chosen.name} encoder…`);
+  const vc = { codec: chosen.codec, width: outW, height: outH, bitrate: 5_000_000, framerate: 30 };
+
+  const target = new ABT();
+  const muxConf = isMp4
+    ? { target, video: { codec: chosen.muxCodec, width:outW, height:outH, frameRate:30 }, fastStart:'in-memory' }
+    : { target, video: { codec: chosen.muxCodec, width:outW, height:outH, frameRate:30 } };
+
+  // Hoist cancellation early so VFX can also be cancelled
+  let cancelled = false;
+  $('btn-cancel-exp').onclick = ()=> { cancelled = true; };
+
+  let audioBuf = null, sr = 48000, nc = 2;
+  // Step 1: extract original audio
+  try{
+    onStatus('Extracting audio…');
+    const ab = await S.file.arrayBuffer();
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    audioBuf = await actx.decodeAudioData(ab.slice(0));
+    sr = audioBuf.sampleRate; nc = Math.min(audioBuf.numberOfChannels, 2);
+    try{ actx.close(); }catch(e){}
+  } catch(e){
+    console.warn('audio extract failed:', e);
+    audioBuf = null;
+  }
+
+  // Step 2: apply Voice FX (separate try so errors are surfaced, not swallowed)
+  let vfxMonoSamples = null;
+  if(S.vfxEnabled && audioBuf){
+    try{
+      onStatus('Applying Voice FX (autotune)…');
+      vfxMonoSamples = await applyAutotuneToBuffer(audioBuf, (p, label) => {
+        onProgress(p * 5); // takes first 5% of progress
+        if(label) onStatus(`Voice FX: ${label}`);
+      }, ()=> cancelled);
+      nc = 1; // autotune output is mono
+    } catch(e){
+      if(e.message === 'cancelled'){
+        S.captions = origCaps;
+        throw e;
+      }
+      console.error('Voice FX failed:', e);
+      S.captions = origCaps;
+      throw new Error('Voice FX failed: ' + (e.message || 'pitch shift error'));
+    }
+  }
+
+  // Step 3: configure muxer audio
+  if(audioBuf){
+    if(isMp4){
+      muxConf.audio = { codec:'aac', sampleRate:sr, numberOfChannels:nc };
+    } else {
+      muxConf.audio = { codec:'A_OPUS', sampleRate:sr, numberOfChannels:nc };
+    }
+  }
+
+  const muxer = new Muxer(muxConf);
+  const ve = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: e => { throw e; }
+  });
+  ve.configure(vc);
+
+  let ae = null;
+  if(audioBuf){
+    const ac = isMp4
+      ? { codec:'mp4a.40.2', sampleRate:sr, numberOfChannels:nc, bitrate: 128_000 }
+      : { codec:'opus', sampleRate:sr, numberOfChannels:nc, bitrate: 128_000 };
+    const asup = await AudioEncoder.isConfigSupported(ac);
+    if(asup.supported){
+      ae = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => { throw e; } });
+      ae.configure(ac);
+    } else { audioBuf = null; }
+  }
+
+  onStatus(trim ? `Encoding ${regions.length} speech regions…` : 'Encoding video…');
+  const fps = 30;
+  const c = document.createElement('canvas');
+  c.width = outW; c.height = outH;
+  const cx = c.getContext('2d', { alpha:false });
+
+  vid.muted = true; vid.pause();
+
+  const seek = t => new Promise(res => {
+    let done = false;
+    const f = ()=>{ if(done) return; done = true; vid.removeEventListener('seeked', f); clearTimeout(to); res(); };
+    const to = setTimeout(f, 3000);
+    vid.addEventListener('seeked', f);
+    try{ vid.currentTime = t; }catch(e){ clearTimeout(to); res(); }
+  });
+
+  // Total frames across all regions
+  let totalFrames = 0;
+  for(const r of regions) totalFrames += Math.ceil((r.end - r.start) * fps);
+
+  let outFrameIdx = 0; // running output frame counter (continuous timeline)
+  for(let regionI = 0; regionI < regions.length; regionI++){
+    const region = regions[regionI];
+    const regFrames = Math.ceil((region.end - region.start) * fps);
+    for(let fi = 0; fi < regFrames; fi++){
+      if(cancelled || !S.exporting){
+        S.captions = origCaps;
+        throw new Error('cancelled');
+      }
+      const sourceT = region.start + (fi / fps);
+      const outputT = outFrameIdx / fps;
+      await seek(sourceT);
+      await new Promise(r => setTimeout(r, 8));
+      // Draw with output timeline (so captions align with re-timed positions)
+      drawFrame(cx, outW, outH, outputT);
+      const frame = new VideoFrame(c, { timestamp: Math.round(outputT * 1_000_000) });
+      ve.encode(frame, { keyFrame: outFrameIdx % 30 === 0 });
+      frame.close();
+      if(outFrameIdx % 8 === 0){
+        onProgress((outFrameIdx/totalFrames)*85);
+        if(trim){
+          onStatus(`Region ${regionI+1}/${regions.length} · frame ${outFrameIdx+1}/${totalFrames}`);
+        } else {
+          onStatus(`Frame ${outFrameIdx+1}/${totalFrames}`);
+        }
+        await new Promise(r => setTimeout(r, 0));
+      }
+      outFrameIdx++;
+    }
+  }
+
+  onStatus('Finalizing video…');
+  await ve.flush(); ve.close();
+  onProgress(88);
+
+  if(ae && audioBuf){
+    onStatus('Encoding audio…');
+    // Source channels: VFX-shifted mono if enabled, otherwise original AudioBuffer
+    const totalSamplesIn = vfxMonoSamples ? vfxMonoSamples.length : audioBuf.length;
+    const sourceChannels = [];
+    if(vfxMonoSamples){
+      sourceChannels.push(vfxMonoSamples);
+    } else {
+      for(let ch = 0; ch < nc; ch++) sourceChannels.push(audioBuf.getChannelData(ch));
+    }
+
+    // Calculate output sample count
+    let outSamples = 0;
+    for(const r of regions){
+      const sStart = Math.floor(r.start * sr);
+      const sEnd = Math.min(Math.floor(r.end * sr), totalSamplesIn);
+      outSamples += Math.max(0, sEnd - sStart);
+    }
+    // Build interleaved output buffer for AudioData encoding
+    const inter = new Float32Array(outSamples * nc);
+    let outIdx = 0;
+    for(const r of regions){
+      const sStart = Math.floor(r.start * sr);
+      const sEnd = Math.min(Math.floor(r.end * sr), totalSamplesIn);
+      for(let i = sStart; i < sEnd; i++){
+        for(let ch = 0; ch < nc; ch++){
+          inter[outIdx * nc + ch] = sourceChannels[ch][i] || 0;
+        }
+        outIdx++;
+      }
+    }
+
+    const spf = 1024;
+    for(let off = 0; off < outSamples; off += spf){
+      if(cancelled){ S.captions = origCaps; throw new Error('cancelled'); }
+      const sz = Math.min(spf, outSamples - off);
+      const sl = inter.subarray(off*nc, (off+sz)*nc);
+      const ad = new AudioData({
+        format: 'f32',
+        sampleRate: sr,
+        numberOfFrames: sz,
+        numberOfChannels: nc,
+        timestamp: Math.round((off/sr)*1_000_000),
+        data: sl
+      });
+      ae.encode(ad); ad.close();
+      if(off % (spf*40) === 0){
+        onProgress(88 + (off/outSamples)*10);
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    await ae.flush(); ae.close();
+  }
+  onProgress(99);
+  onStatus(isMp4 ? 'Writing MP4…' : 'Writing WebM…');
+  muxer.finalize();
+  vid.muted = false;
+  // Restore original captions
+  S.captions = origCaps;
+  return new Blob([target.buffer], { type: isMp4 ? 'video/mp4' : 'video/webm' });
+}
+
+/* ────────────────────────────────────────────────────────────
+   SAVED CUSTOM PRESETS
+   ──────────────────────────────────────────────────────────── */
+function getSavedPresets(){
+  try{ return JSON.parse(localStorage.getItem('cc_saved_presets')) || []; }
+  catch(e){ return []; }
+}
+function setSavedPresets(arr){
+  try{ localStorage.setItem('cc_saved_presets', JSON.stringify(arr)); }catch(e){}
+}
+
+function renderSavedPresets(){
+  const list = $('my-presets');
+  const presets = getSavedPresets();
+  list.innerHTML = '';
+  if(!presets.length){
+    const e = document.createElement('div');
+    e.className = 'saved-empty';
+    e.innerHTML = 'No saved presets yet.<br>Adjust your style, then tap <strong style="color:var(--accent)">+ Save current</strong> to keep it.';
+    list.appendChild(e);
+    return;
+  }
+  presets.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'saved-preset';
+    const swatch = (p.style.upper ? 'AB' : 'Ab');
+    row.innerHTML = `
+      <div class="saved-preset-prev"><span style="color:${p.style.color};font-family:'${p.style.font}',sans-serif;font-weight:${p.style.weight||700};${p.style.italic?'font-style:italic;':''};-webkit-text-stroke:${p.style.outlineW>0?Math.min(p.style.outlineW/3,2):0}px ${p.style.outline||'#000'};">${swatch}</span></div>
+      <input class="saved-preset-name" value="${escHtml(p.name)}" maxlength="32">
+      <div class="saved-preset-actions">
+        <button class="apply" title="Apply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="update" title="Update with current style"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+        <button class="delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    `;
+    const nameInput = row.querySelector('.saved-preset-name');
+    nameInput.addEventListener('change', ()=> {
+      const all = getSavedPresets();
+      all[i].name = nameInput.value.trim() || `Preset ${i+1}`;
+      nameInput.value = all[i].name;
+      setSavedPresets(all);
+    });
+    nameInput.addEventListener('click', e => e.stopPropagation());
+    row.querySelector('.apply').onclick = ()=> {
+      Object.assign(S.style, p.style);
+      applyStyleToUI();
+      saveStyle();
+      $$('.saved-preset').forEach((r, idx) => r.classList.toggle('active', idx === i));
+      $$('.preset').forEach(x => x.classList.remove('on'));
+      toast(`Applied "${p.name}"`, 'ok');
+    };
+    row.querySelector('.update').onclick = ()=> {
+      if(!confirm(`Update "${p.name}" with current style?`)) return;
+      const all = getSavedPresets();
+      all[i].style = JSON.parse(JSON.stringify(S.style));
+      setSavedPresets(all);
+      toast(`Updated "${p.name}"`, 'ok');
+      renderSavedPresets();
+    };
+    row.querySelector('.delete').onclick = ()=> {
+      if(!confirm(`Delete "${p.name}"?`)) return;
+      const all = getSavedPresets();
+      all.splice(i, 1);
+      setSavedPresets(all);
+      renderSavedPresets();
+    };
+    list.appendChild(row);
+  });
+}
+
+$('btn-save-preset').onclick = ()=> {
+  const name = prompt('Name this preset:', `My Style ${getSavedPresets().length + 1}`);
+  if(!name || !name.trim()) return;
+  const all = getSavedPresets();
+  all.push({ name: name.trim(), style: JSON.parse(JSON.stringify(S.style)) });
+  setSavedPresets(all);
+  renderSavedPresets();
+  toast(`Saved "${name.trim()}"`, 'ok');
+};
+
+/* ────────────────────────────────────────────────────────────
+   GROQ USAGE TRACKING (informational; quota is enforced server-side)
+   Whisper free-tier limit: 2,000 requests/day
+   ──────────────────────────────────────────────────────────── */
+const GROQ_DAILY_LIMIT = 2000;
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function getUsage(){
+  try{
+    const stored = JSON.parse(localStorage.getItem('groq_usage') || '{}');
+    if(stored.date !== todayKey()) return { date: todayKey(), count: 0, dailyLimitHit: false };
+    return stored;
+  } catch(e){ return { date: todayKey(), count: 0, dailyLimitHit: false }; }
+}
+function setUsage(u){
+  try{ localStorage.setItem('groq_usage', JSON.stringify(u)); }catch(e){}
+}
+function bumpUsage(){
+  const u = getUsage();
+  u.count++;
+  setUsage(u);
+  refreshUsageDisplay();
+}
+function markDailyLimitHit(){
+  const u = getUsage();
+  u.dailyLimitHit = true;
+  setUsage(u);
+  refreshUsageDisplay();
+}
+function refreshUsageDisplay(){
+  const el = $('usage-display');
+  if(!el) return;
+  const u = getUsage();
+  const pct = Math.min(100, (u.count / GROQ_DAILY_LIMIT) * 100);
+  const remaining = Math.max(0, GROQ_DAILY_LIMIT - u.count);
+  let color = 'var(--success)';
+  if(pct > 75) color = 'var(--warn)';
+  if(pct > 95 || u.dailyLimitHit) color = 'var(--err)';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+      <span>Today: <strong style="color:${color}">${u.count}</strong> / ${GROQ_DAILY_LIMIT} requests</span>
+      <span style="color:var(--text3)">${remaining} left</span>
+    </div>
+    <div style="height:4px;background:var(--surf3);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${color};transition:width .3s"></div></div>
+    ${u.dailyLimitHit ? '<div style="font-size:10px;color:var(--err);margin-top:6px">Daily limit reached. Resets at midnight Pacific. No charge — free tier.</div>' : ''}
+  `;
+}
+
+// Pre-flight check before any request — returns true if OK to proceed
+function checkUsageBeforeRequest(estimatedRequests = 1){
+  const u = getUsage();
+  if(u.dailyLimitHit){
+    toast('Daily Groq quota already reached. Try again tomorrow (no charge).', 'err');
+    return false;
+  }
+  if(u.count + estimatedRequests > GROQ_DAILY_LIMIT){
+    if(!confirm(`This may exceed your daily free quota (${u.count}/${GROQ_DAILY_LIMIT} used, this needs ~${estimatedRequests} more). The API will return an error if exceeded — no charge will occur. Continue?`)) return false;
+  } else if(u.count + estimatedRequests > GROQ_DAILY_LIMIT * 0.9){
+    // Quiet warning at 90%
+    toast(`Heads up: ${GROQ_DAILY_LIMIT - u.count} requests left today on the free tier`, 'warn');
+  }
+  return true;
+}
+
+/* ────────────────────────────────────────────────────────────
+   TRIM SILENCE — Groq word-level VAD
+   ──────────────────────────────────────────────────────────── */
+$('btn-detect-groq').onclick = detectSpeechGroq;
+$('trim-padspeech').oninput = e => $('v-pad-speech').textContent = (+e.target.value).toFixed(2) + 's';
+$('t-trim').onclick = ()=> {
+  S.trimEnabled = !S.trimEnabled;
+  $('t-trim').classList.toggle('on', S.trimEnabled);
+  $('trim-status').textContent = S.trimEnabled && S.speechRegions ? 'Active' : 'Off';
+};
+
+/* GROQ-based speech detection.
+   If we already have captions from Groq, use their segment timestamps directly.
+   Otherwise call Groq with timestamp_granularities=word for precise word-level boundaries. */
+async function detectSpeechGroq(){
+  if(!S.file){ toast('Load a video first', 'warn'); return; }
+  const apiKey = localStorage.getItem('groq_key');
+  if(!apiKey){
+    toast('Add a Groq API key in ⚙ Settings first', 'warn');
+    $('btn-settings').click();
+    return;
+  }
+  const estDuration = vid.duration || 60;
+  const estChunks = Math.max(1, Math.ceil(estDuration / 786));
+  if(!checkUsageBeforeRequest(estChunks)) return;
+
+  let aborted = false;
+  showLoader('Detecting speech (Groq)', 'Using Whisper word-level timestamps for highest accuracy.', 0, true, ()=> { aborted = true; hideLoader(); });
+
+  try{
+    updateLoader('Decoding audio…', 10);
+    const ab = await S.file.arrayBuffer();
+    if(aborted) return;
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuf;
+    try{ audioBuf = await actx.decodeAudioData(ab.slice(0)); }
+    catch(e){ try{ actx.close(); }catch(x){} throw new Error('Cannot decode audio'); }
+    if(aborted) return;
+
+    updateLoader('Resampling to 16kHz…', 25);
+    const mono = await extractMono16k(audioBuf, p => updateLoader(null, 25 + p * 0.2), ()=> aborted);
+    try{ actx.close(); }catch(e){}
+    if(aborted) return;
+
+    const wavBlob = float32ToWav(mono, 16000);
+    const fileSizeMB = wavBlob.size / 1048576;
+    const MAX_MB = 24;
+    const padSec = +$('trim-padspeech').value;
+
+    let allWords = []; // { start, end }
+
+    if(fileSizeMB <= MAX_MB){
+      updateLoader(`Sending audio to Groq (${fileSizeMB.toFixed(1)}MB)…`, 55);
+      const result = await groqTranscribeWords(wavBlob, apiKey, ()=> aborted);
+      if(aborted) return;
+      const words = (result.words || []).filter(w => typeof w.start === 'number' && typeof w.end === 'number');
+      allWords = words.map(w => ({ start: w.start, end: w.end }));
+    } else {
+      // Chunk for files > 24MB
+      const overlap = 2 * 16000;
+      const MAX_SAMPLES = Math.floor((MAX_MB * 1024 * 1024 - 44) / 2);
+      const step = MAX_SAMPLES - overlap;
+      const numChunks = Math.ceil(mono.length / step);
+      updateLoader(`Splitting into ${numChunks} chunks…`, 50);
+      const t0 = Date.now();
+      for(let i = 0; i < numChunks; i++){
+        if(aborted) return;
+        const ss = i * step;
+        const se = Math.min(ss + MAX_SAMPLES, mono.length);
+        const slice = mono.subarray(ss, se);
+        const off = ss / 16000;
+        const blob = float32ToWav(slice, 16000);
+        const elapsed = (Date.now() - t0)/1000;
+        const eta = i > 0 ? Math.ceil((elapsed/i) * (numChunks-i)) : 0;
+        updateLoader(`Chunk ${i+1}/${numChunks}${eta?` · ~${eta}s left`:''}`, 50 + (i/numChunks)*40);
+        const result = await groqTranscribeWords(blob, apiKey, ()=> aborted);
+        if(aborted) return;
+        const words = (result.words || []).filter(w => typeof w.start === 'number' && typeof w.end === 'number');
+        for(const w of words){
+          // Skip words inside the overlap region for non-first chunks
+          if(i > 0 && w.start < 1.5) continue;
+          allWords.push({ start: w.start + off, end: w.end + off });
+        }
+      }
+    }
+
+    if(!allWords.length){
+      hideLoader();
+      toast('No speech detected', 'warn');
+      return;
+    }
+
+    updateLoader('Building speech regions…', 95);
+    // Group adjacent words into regions, merging with padding
+    allWords.sort((a, b) => a.start - b.start);
+    const regions = [];
+    const minGap = 0.5; // gap below this means same region
+    for(const w of allWords){
+      const sStart = Math.max(0, w.start - padSec);
+      const sEnd = Math.min(vid.duration, w.end + padSec);
+      if(regions.length && sStart <= regions[regions.length-1].end + minGap){
+        regions[regions.length-1].end = Math.max(regions[regions.length-1].end, sEnd);
+      } else {
+        regions.push({ start: sStart, end: sEnd });
+      }
+    }
+
+    finalizeRegions(regions);
+    hideLoader();
+    const saved = vid.duration - regions.reduce((s, r) => s + (r.end - r.start), 0);
+    toast(`${regions.length} regions · ${fmtTime(saved)} can be trimmed`, 'ok');
+  } catch(e){
+    hideLoader();
+    if(!aborted){
+      toast('Groq trim failed: ' + e.message, 'err');
+      console.error(e);
+    }
+  }
+}
+
+async function groqTranscribeWords(blob, apiKey, isAborted){
+  const fd = new FormData();
+  fd.append('file', blob, 'audio.wav');
+  fd.append('model', 'whisper-large-v3');
+  fd.append('response_format', 'verbose_json');
+  fd.append('timestamp_granularities[]', 'word');
+  fd.append('language', 'en');
+  fd.append('temperature', '0');
+  return groqRequest(fd, apiKey, isAborted);
+}
+
+async function groqRequest(fd, apiKey, isAborted){
+  const ctrl = new AbortController();
+  const tick = setInterval(()=> { if(isAborted && isAborted()){ ctrl.abort(); clearInterval(tick); } }, 200);
+  let res;
+  try{
+    res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey },
+      body: fd,
+      signal: ctrl.signal
+    });
+  } finally { clearInterval(tick); }
+
+  // Track this request for daily usage display
+  bumpUsage();
+
+  if(!res.ok){
+    let detail = '';
+    try{ const j = await res.json(); detail = j?.error?.message || JSON.stringify(j).slice(0,150); }
+    catch(e){ detail = await res.text().then(t => t.slice(0,150)).catch(()=>'') }
+    if(res.status === 401) throw new Error('Invalid API key — check ⚙ Settings');
+    if(res.status === 413) throw new Error('Audio chunk too large (max 24MB)');
+    if(res.status === 429){
+      // Distinguish RPM (per-minute) vs RPD (per-day) limit
+      const retryAfter = res.headers.get('retry-after');
+      const isDaily = /day|daily|RPD|requests per day/i.test(detail);
+      if(isDaily){
+        markDailyLimitHit();
+        throw new Error('Daily Groq quota reached — try again tomorrow (no charge, free tier)');
+      }
+      const wait = retryAfter ? `~${retryAfter}s` : 'a minute';
+      throw new Error(`Per-minute rate limit — wait ${wait} and retry`);
+    }
+    throw new Error(`Groq ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+function finalizeRegions(regions){
+  S.speechRegions = regions;
+  S.trimEnabled = true;
+  const totalDur = vid.duration;
+  const speechDur = regions.reduce((s, r) => s + (r.end - r.start), 0);
+  const saved = totalDur - speechDur;
+  $('trim-controls').style.display = '';
+  $('trim-status').textContent = 'Active';
+  $('trim-regions').textContent = regions.length;
+  $('trim-orig').textContent = fmtTime(totalDur);
+  $('trim-trimmed').textContent = fmtTime(speechDur);
+  $('trim-saved').textContent = fmtTime(saved) + ` (${Math.round(saved/totalDur*100)}%)`;
+  $('t-trim').classList.add('on');
+}
+
+
+// Map an original timestamp to the trimmed timeline (after silent regions removed)
+function originalToTrimmed(originalT){
+  if(!S.trimEnabled || !S.speechRegions) return originalT;
+  let elapsed = 0;
+  for(const r of S.speechRegions){
+    if(originalT < r.start) return elapsed; // in a silent gap; clamp to last speech end
+    if(originalT <= r.end) return elapsed + (originalT - r.start);
+    elapsed += r.end - r.start;
+  }
+  return elapsed;
+}
+
+// Re-time captions onto the trimmed timeline
+function getTrimmedCaptions(){
+  if(!S.trimEnabled || !S.speechRegions) return S.captions;
+  return S.captions.map(c => {
+    const ns = originalToTrimmed(c.s);
+    const ne = originalToTrimmed(c.e);
+    return { ...c, s: ns, e: ne };
+  }).filter(c => c.e > c.s);
+}
+
+function getTrimmedDuration(){
+  if(!S.trimEnabled || !S.speechRegions) return vid.duration;
+  return S.speechRegions.reduce((s, r) => s + (r.end - r.start), 0);
+}
+
+/* ────────────────────────────────────────────────────────────
+   VOICE FX (autotune to melody) — experimental
+   Procedural melody + offline PSOLA-style pitch shifting
+   ──────────────────────────────────────────────────────────── */
+const MELODIES = {
+  uplifting: { bpm: 110, key: 'C major',
+    notes: [[60,1],[62,1],[64,1],[67,1],[69,1],[67,1],[64,1],[62,1],[60,1],[64,2],[62,2],[60,4]] },
+  melancholy: { bpm: 75, key: 'A minor',
+    notes: [[57,2],[60,2],[59,1],[57,1],[55,2],[57,2],[60,1],[62,1],[60,2],[59,2],[57,4]] },
+  heroic: { bpm: 130, key: 'D major',
+    notes: [[62,1],[66,1],[69,2],[71,1],[69,1],[66,2],[62,1],[66,1],[69,1],[74,1],[71,2],[69,4]] },
+  dreamy: { bpm: 90, key: 'F lydian',
+    notes: [[65,2],[69,2],[71,2],[72,2],[71,2],[69,2],[65,2],[64,2],[65,4]] },
+  trap: { bpm: 140, key: 'G minor',
+    notes: [[55,1],[55,1],[58,1],[60,1],[55,1],[58,1],[60,1],[62,1],[55,1],[55,1],[58,2],[55,4]] }
+};
+
+$('vfx-melody').onchange = e => { S.vfxMelody = e.target.value; };
+$('vfx-strength').oninput = e => { S.vfxStrength = +e.target.value; $('v-vfx-strength').textContent = e.target.value; };
+$('vfx-notedur').oninput = e => {
+  S.vfxNoteDur = +e.target.value;
+  const labels = ['1/8','1/4','1/2','whole'];
+  $('v-vfx-notedur').textContent = labels[S.vfxNoteDur];
+};
+$('vfx-melvol').oninput = e => { S.vfxMelodyVol = +e.target.value; $('v-vfx-melvol').textContent = e.target.value; };
+$('t-vfx').onclick = ()=> {
+  S.vfxEnabled = !S.vfxEnabled;
+  $('t-vfx').classList.toggle('on', S.vfxEnabled);
+  $('vfx-controls').style.display = S.vfxEnabled ? '' : 'none';
+  $('vfx-status').textContent = S.vfxEnabled ? 'On' : 'Off';
+};
+$('btn-vfx-preview').onclick = previewVfx;
+
+function midiToFreq(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+function freqToMidi(f){ return 69 + 12 * Math.log2(f / 440); }
+
+function buildMelodyTimeline(melodyKey, totalDur, noteDurMultiplier){
+  const m = MELODIES[melodyKey];
+  if(!m) return [];
+  const beatSec = 60 / m.bpm;
+  const out = [];
+  let t = 0;
+  while(t < totalDur){
+    for(const [note, beats] of m.notes){
+      if(t >= totalDur) break;
+      const dur = beats * beatSec * noteDurMultiplier;
+      out.push({ start: t, end: Math.min(t + dur, totalDur), midi: note });
+      t += dur;
+    }
+  }
+  return out;
+}
+function melodyNoteAt(timeline, t){
+  // Binary search would be faster but linear is fine for typical lengths
+  for(const n of timeline){
+    if(t >= n.start && t < n.end) return n;
+  }
+  return timeline[timeline.length - 1] || null;
+}
+
+// Autocorrelation pitch detector. Returns Hz, or 0 if no clear pitch.
+function detectPitch(samples, sampleRate){
+  const SIZE = samples.length;
+  let rms = 0;
+  for(let i = 0; i < SIZE; i++) rms += samples[i] * samples[i];
+  rms = Math.sqrt(rms / SIZE);
+  if(rms < 0.01) return 0;
+  const minLag = Math.floor(sampleRate / 500);
+  const maxLag = Math.floor(sampleRate / 75);
+  let bestLag = -1, bestCorr = 0;
+  for(let lag = minLag; lag <= maxLag; lag++){
+    let corr = 0;
+    for(let i = 0; i < SIZE - lag; i++) corr += samples[i] * samples[i + lag];
+    if(corr > bestCorr){ bestCorr = corr; bestLag = lag; }
+  }
+  if(bestLag < 0) return 0;
+  return sampleRate / bestLag;
+}
+
+// Snap detected MIDI pitch toward target melody note (octave-aware).
+function calcShiftSemitones(detectedMidi, targetMidi, strength01){
+  if(!isFinite(detectedMidi) || detectedMidi <= 0) return 0;
+  let t = targetMidi;
+  while(t - detectedMidi > 6) t -= 12;
+  while(detectedMidi - t > 6) t += 12;
+  const diff = t - detectedMidi;
+  const clamped = Math.max(-7, Math.min(7, diff));
+  return clamped * strength01;
+}
+
+function resampleChunk(input, ratio){
+  const outLen = Math.floor(input.length / ratio);
+  const out = new Float32Array(outLen);
+  for(let i = 0; i < outLen; i++){
+    const sI = i * ratio;
+    const i0 = Math.floor(sI);
+    const i1 = Math.min(i0 + 1, input.length - 1);
+    out[i] = input[i0] * (1 - (sI - i0)) + input[i1] * (sI - i0);
+  }
+  return out;
+}
+
+/* PSOLA-style pitch shifter for offline batch processing.
+   40ms Hann windows, 75% overlap, resample-and-stretch-back per frame.
+   Yields to event loop periodically so the UI stays responsive. */
+async function pitchShiftAudio(input, sampleRate, shiftFn, onProgress, isAborted){
+  const FRAME = Math.floor(sampleRate * 0.04);
+  const HOP = Math.floor(FRAME / 4);
+  const out = new Float32Array(input.length);
+  const window = new Float32Array(FRAME);
+  for(let i = 0; i < FRAME; i++){
+    window[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (FRAME - 1));
+  }
+  const numFrames = Math.max(1, Math.floor((input.length - FRAME) / HOP));
+  let frameIdx = 0;
+  for(let pos = 0; pos + FRAME < input.length; pos += HOP){
+    if(isAborted && isAborted()) throw new Error('cancelled');
+    const t = pos / sampleRate;
+    const semis = shiftFn(t);
+    const ratio = Math.pow(2, semis / 12);
+    const frame = new Float32Array(FRAME);
+    for(let i = 0; i < FRAME; i++) frame[i] = input[pos + i] * window[i];
+    const resampled = resampleChunk(frame, ratio);
+    const remapped = new Float32Array(FRAME);
+    const r = resampled.length / FRAME;
+    for(let i = 0; i < FRAME; i++){
+      const sI = i * r;
+      const i0 = Math.floor(sI);
+      if(i0 >= resampled.length) break;
+      const i1 = Math.min(i0 + 1, resampled.length - 1);
+      remapped[i] = resampled[i0] * (1 - (sI - i0)) + resampled[i1] * (sI - i0);
+    }
+    for(let i = 0; i < FRAME; i++) out[pos + i] += remapped[i] * window[i];
+    frameIdx++;
+    // Yield to event loop every ~50 frames (~500ms of audio at 10ms hop)
+    if(frameIdx % 50 === 0){
+      if(onProgress) onProgress(frameIdx / numFrames);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  // Hann + 75% overlap sum is ~1.5
+  for(let i = 0; i < out.length; i++) out[i] /= 1.5;
+  return out;
+}
+
+function renderMelodyAudio(timeline, totalSamples, sampleRate, volume01){
+  const out = new Float32Array(totalSamples);
+  if(volume01 <= 0) return out;
+  for(const note of timeline){
+    const startS = Math.floor(note.start * sampleRate);
+    const endS = Math.floor(note.end * sampleRate);
+    const freq = midiToFreq(note.midi);
+    const noteLen = endS - startS;
+    const fadeLen = Math.min(Math.floor(0.02 * sampleRate), Math.floor(noteLen / 4));
+    for(let i = 0; i < noteLen && startS + i < totalSamples; i++){
+      let env = volume01;
+      if(i < fadeLen) env *= i / fadeLen;
+      else if(noteLen - i < fadeLen) env *= (noteLen - i) / fadeLen;
+      const phase = 2 * Math.PI * freq * i / sampleRate;
+      const sample = (Math.sin(phase) + 0.15 * Math.sin(phase * 2)) * 0.18;
+      out[startS + i] += sample * env;
+    }
+  }
+  return out;
+}
+
+async function applyAutotuneToBuffer(audioBuf, onProgress, isAborted){
+  const sr = audioBuf.sampleRate;
+  const numCh = audioBuf.numberOfChannels;
+  const total = audioBuf.length;
+  const mono = new Float32Array(total);
+  if(numCh === 1){ mono.set(audioBuf.getChannelData(0)); }
+  else {
+    const c0 = audioBuf.getChannelData(0);
+    const c1 = audioBuf.getChannelData(1);
+    for(let i = 0; i < total; i++) mono[i] = (c0[i] + c1[i]) * 0.5;
+  }
+  if(onProgress) onProgress(0.05, 'preparing');
+  if(isAborted && isAborted()) throw new Error('cancelled');
+
+  const noteMultipliers = [0.5, 1, 2, 4];
+  const noteMul = noteMultipliers[S.vfxNoteDur] || 1;
+  const totalDur = total / sr;
+  const timeline = buildMelodyTimeline(S.vfxMelody, totalDur, noteMul);
+
+  // Pre-compute pitch detection over the audio in 50ms windows
+  const winSize = Math.floor(sr * 0.05);
+  const hopSize = Math.floor(sr * 0.025);
+  const numWins = Math.max(1, Math.floor((total - winSize) / hopSize));
+  const pitches = new Float32Array(numWins);
+  for(let i = 0; i < numWins; i++){
+    if(isAborted && isAborted()) throw new Error('cancelled');
+    const s = i * hopSize;
+    const slice = mono.subarray(s, s + winSize);
+    pitches[i] = detectPitch(slice, sr);
+    if(onProgress && i % 100 === 0){
+      onProgress(0.05 + 0.3 * (i / numWins), `analyzing pitch ${Math.round(i/numWins*100)}%`);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  if(onProgress) onProgress(0.35, 'shifting pitch 0%');
+
+  const strength01 = S.vfxStrength / 100;
+  const shiftFn = (timeSec) => {
+    const winIdx = Math.floor(timeSec * sr / hopSize);
+    const detectedFreq = pitches[Math.max(0, Math.min(numWins - 1, winIdx))];
+    if(detectedFreq <= 0) return 0;
+    const detectedMidi = freqToMidi(detectedFreq);
+    const note = melodyNoteAt(timeline, timeSec);
+    if(!note) return 0;
+    return calcShiftSemitones(detectedMidi, note.midi, strength01);
+  };
+
+  const shifted = await pitchShiftAudio(mono, sr, shiftFn, p => {
+    if(onProgress) onProgress(0.35 + 0.55 * p, `shifting pitch ${Math.round(p*100)}%`);
+  }, isAborted);
+
+  if(S.vfxMelodyVol > 0){
+    const melody = renderMelodyAudio(timeline, total, sr, S.vfxMelodyVol / 100);
+    for(let i = 0; i < total; i++) shifted[i] += melody[i];
+  }
+
+  // Soft limiter
+  let peak = 0;
+  for(let i = 0; i < shifted.length; i++) peak = Math.max(peak, Math.abs(shifted[i]));
+  if(peak > 0.99){
+    const scale = 0.99 / peak;
+    for(let i = 0; i < shifted.length; i++) shifted[i] *= scale;
+  }
+  if(onProgress) onProgress(1, 'done');
+  return shifted;
+}
+
+async function previewVfx(){
+  if(!S.file){ toast('Load a video first', 'warn'); return; }
+  S._vfxAbort = false;
+  showLoader('Voice FX preview', 'Rendering 5s sample…', 0, true, ()=>{ S._vfxAbort = true; hideLoader(); });
+  try{
+    const ab = await S.file.arrayBuffer();
+    if(S._vfxAbort) return;
+    updateLoader('Decoding audio…', 10);
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuf;
+    try{ audioBuf = await actx.decodeAudioData(ab.slice(0)); }
+    catch(e){ try{ actx.close(); }catch(x){} throw new Error('Cannot decode audio'); }
+    const sr = audioBuf.sampleRate;
+    const startSec = Math.max(0, Math.min(audioBuf.duration - 5, vid.currentTime || 0));
+    const startS = Math.floor(startSec * sr);
+    const endS = Math.min(audioBuf.length, startS + Math.floor(5 * sr));
+    const sliceLen = endS - startS;
+    const sliceBuf = actx.createBuffer(audioBuf.numberOfChannels, sliceLen, sr);
+    for(let ch = 0; ch < audioBuf.numberOfChannels; ch++){
+      sliceBuf.getChannelData(ch).set(audioBuf.getChannelData(ch).subarray(startS, endS));
+    }
+    updateLoader('Auto-tuning sample…', 20);
+    const shifted = await applyAutotuneToBuffer(sliceBuf, (p, label) => {
+      if(S._vfxAbort) return;
+      updateLoader(label || null, 20 + p * 75);
+    }, ()=> S._vfxAbort);
+    if(S._vfxAbort){ try{ actx.close(); }catch(e){} return; }
+    updateLoader('Playing preview…', 100);
+    const playBuf = actx.createBuffer(1, shifted.length, sr);
+    playBuf.getChannelData(0).set(shifted);
+    const src = actx.createBufferSource();
+    src.buffer = playBuf;
+    src.connect(actx.destination);
+    src.start();
+    src.onended = ()=>{ try{ actx.close(); }catch(e){} hideLoader(); };
+  } catch(e){
+    hideLoader();
+    if(!S._vfxAbort) toast('Preview failed: ' + e.message, 'err');
+    console.error(e);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   SLIDER SCROLL PROTECTION
+   On mobile, sliders are easy to bump while scrolling. We require
+   the user to tap-and-hold briefly before the slider engages, and
+   vertical scroll always wins during a touch.
+   ──────────────────────────────────────────────────────────── */
+function makeSlidersScrollSafe(){
+  document.querySelectorAll('input[type="range"]').forEach(setupRange);
+}
+function setupRange(r){
+  if(r.dataset.scrollSafe) return;
+  r.dataset.scrollSafe = '1';
+  let pressTimer = null;
+  let startY = 0, startX = 0;
+  let activated = false;
+  let originalValue = null;
+
+  r.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    const t = e.touches[0];
+    startY = t.clientY; startX = t.clientX;
+    originalValue = r.value;
+    activated = false;
+    pressTimer = setTimeout(()=> {
+      activated = true;
+      r.classList.add('active');
+    }, 180);
+  }, { passive: true });
+
+  r.addEventListener('touchmove', e => {
+    if(activated) return;
+    if(e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const dy = Math.abs(t.clientY - startY);
+    const dx = Math.abs(t.clientX - startX);
+    if(dy > 8 && dy > dx){
+      clearTimeout(pressTimer); pressTimer = null;
+      // Restore value if it was changed before activation
+      if(originalValue !== null && r.value !== originalValue){
+        r.value = originalValue;
+        r.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }, { passive: true });
+
+  const cleanup = ()=> {
+    clearTimeout(pressTimer); pressTimer = null;
+    setTimeout(()=> { r.classList.remove('active'); activated = false; }, 50);
+    originalValue = null;
+  };
+  r.addEventListener('touchend', cleanup);
+  r.addEventListener('touchcancel', cleanup);
+}
+
+/* ────────────────────────────────────────────────────────────
+   INIT
+   ──────────────────────────────────────────────────────────── */
+canvas.width = 720; canvas.height = 405;
+ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+bindStyle();
+applyStyleToUI();
+renderPresets();
+renderSavedPresets();
+renderCaps();
+makeSlidersScrollSafe();
+
+// Keyboard shortcuts (when not in inputs)
+document.addEventListener('keydown', e => {
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if(!S.file) return;
+  if(e.code === 'Space'){ e.preventDefault(); vid.paused ? vid.play() : vid.pause(); }
+  else if(e.code === 'ArrowLeft'){ e.preventDefault(); vid.currentTime = Math.max(0, vid.currentTime - 5); }
+  else if(e.code === 'ArrowRight'){ e.preventDefault(); vid.currentTime = Math.min(vid.duration, vid.currentTime + 5); }
+});
+
+// Scroll active caption into view
+let lastActiveCapId = null;
+setInterval(()=> {
+  if(!S.captions.length) return;
+  const t = vid.currentTime;
+  const active = S.captions.find(c => t >= c.s && t <= c.e);
+  if(active && active.id !== lastActiveCapId){
+    lastActiveCapId = active.id;
+    const el = document.querySelector(`.cap-item[data-id="${active.id}"]`);
+    if(el && document.querySelector('#pane-captions.on')){
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+  }
+}, 500);
+</script>
+</body>
+</html>
